@@ -15,22 +15,18 @@ from email.mime.text import MIMEText
 app = Flask(__name__)
 
 # Configuration settings
-app.config['SECRET_KEY'] = 'hello'
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Seun22ade#'
-app.config['MYSQL_DB'] = 'ooh_tracker'
+db=mysql.connector.connect(
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USERNAME"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME"),
+    port=int(os.getenv("DB_PORT", 3306))
+)
+
+app.config['DB_DB'] = 'ooh_tracker'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov'}
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
-# Add these configuration variables (update with your email settings)
-app.config['MAIL_SERVER'] = 'smtp.example.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'your_email@example.com'
-app.config['MAIL_PASSWORD'] = 'your_email_password'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_DEFAULT_SENDER'] = 'your_email@example.com'
 
 mysql = MySQL(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
