@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Consumption | OOH Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --secondary: #858796;
+            --success: #1cc88a;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', sans-serif;
+            padding-top: 56px; /* Adjust for fixed navbar */
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 220px;
+            z-index: 1000;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            object-fit: contain;
+            background-color: white;
+            padding: 5px;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+            padding: 1rem;
+        }
+        
+        .sidebar-nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-nav-link:hover, .sidebar-nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .sidebar-nav-icon {
+            margin-right: 0.5rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .content {
+            margin-left: 220px;
+            padding: 2rem;
+        }
+        
+        /* Form Styles */
+        .tracking-form {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+        }
+        
+        /* Media Capture */
+        .media-capture-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .capture-btn {
+            flex: 1;
+            min-width: 200px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ddd;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .capture-btn:hover {
+            border-color: var(--primary);
+            background-color: rgba(78, 115, 223, 0.05);
+        }
+        
+        .capture-btn i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .media-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .media-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .media-item img, .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .remove-media {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        /* Location Capture */
+        .location-status {
+            padding: 0.75rem;
+            border-radius: 0.35rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .location-status i {
+            margin-right: 0.5rem;
+        }
+        
+        .status-waiting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Form Elements */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .checkbox-option {
+            flex: 1 0 45%;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: -10px;
+            font-size: 0.85rem;
+            color: var(--secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar-brand-text, .sidebar-nav-text {
+                display: none;
+            }
+            .content {
+                margin-left: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="sidebar-logo">
+            <div class="sidebar-brand-text">OOH Tracker</div>
+        </a>
+        
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-speedometer2"></i>
+                    <span class="sidebar-nav-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('track') }}" class="sidebar-nav-link active">
+                    <i class="sidebar-nav-icon bi bi-plus-circle"></i>
+                    <span class="sidebar-nav-text">Track Consumption</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('instructions') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-info-circle"></i>
+                    <span class="sidebar-nav-text">Instructions</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('logout') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-box-arrow-right"></i>
+                    <span class="sidebar-nav-text">Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="content">
+        <div class="tracking-form">
+            <h2 class="mb-4">Track Your Consumption</h2>
+            
+            <form method="POST" enctype="multipart/form-data" id="consumptionForm">
+                <!-- Section 1: Media Capture -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
+                    <p class="text-muted">Capture photos, videos, or audio of your consumption</p>
+                    
+                    <div class="media-capture-container">
+                        <!-- Photo Capture -->
+                        <div class="capture-btn" id="photoCaptureBtn">
+                            <i class="bi bi-camera-fill"></i>
+                            <span>Take Photo</span>
+                            <input type="file" id="photoInput" accept="image/*" capture="environment" style="display: none;">
+                        </div>
+                        
+                        <!-- Video Capture -->
+                        <div class="capture-btn" id="videoCaptureBtn">
+                            <i class="bi bi-camera-video-fill"></i>
+                            <span>Record Video</span>
+                            <input type="file" id="videoInput" accept="video/*" capture="environment" style="display: none;">
+                        </div>
+                        
+                        <!-- Audio Capture -->
+                        <div class="capture-btn" id="audioCaptureBtn">
+                            <i class="bi bi-mic-fill"></i>
+                            <span>Record Audio</span>
+                            <input type="file" id="audioInput" accept="audio/*" capture="environment" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="media-preview" id="mediaPreview">
+                        <!-- Media previews will appear here -->
+                    </div>
+                </div>
+                
+                <!-- Section 2: Product Information -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Food Type</label>
+                            <select class="form-select" name="food_type" required>
+                                <option value="" selected disabled>Select type</option>
+                                <option value="snack">Snack</option>
+                                <option value="noodles">Noodles</option>
+                                <option value="beverage">Beverage</option>
+                                <option value="meal">Meal</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Brand Name</label>
+                            <input type="text" class="form-control" name="brand" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Price (₦)</label>
+                            <input type="number" step="0.01" class="form-control" name="price" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Packaging Type</label>
+                            <select class="form-select" name="packaging_type" required>
+                                <option value="" selected disabled>Select packaging</option>
+                                <option value="bottle">Bottle</option>
+                                <option value="can">Can</option>
+                                <option value="pouch">Pouch</option>
+                                <option value="wrapper">Wrapper</option>
+                                <option value="cup">Cup</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Section 3: Location & Context -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="bi bi-geo-alt"></i> Location & Context</h3>
+                    
+                    <button type="button" class="btn btn-primary" id="getLocationBtn">
+                        <i class="bi bi-geo-alt-fill"></i> Capture Current Location
+                    </button>
+                    
+                    <div id="locationStatus" class="location-status status-waiting">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>Location not captured yet</span>
+                    </div>
+                    
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                    <input type="hidden" id="accuracy" name="accuracy">
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Location Type</label>
+                            <select class="form-select" name="location_type" required>
+                                <option value="" selected disabled>Select location type</option>
+                                <option value="work">Workplace</option>
+                                <option value="school">School</option>
+                                <option value="transport">Transportation</option>
+                                <option value="social">Social Gathering</option>
+                                <option value="home">Home</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Purchase Location</label>
+                            <select class="form-select" name="purchase_location" required>
+                                <option value="" selected disabled>Where did you buy this?</option>
+                                <option value="convenience">Convenience Store</option>
+                                <option value="supermarket">Supermarket</option>
+                                <option value="street">Street Vendor</option>
+                                <option value="restaurant">Restaurant/Cafe</option>
+                                <option value="vending">Vending Machine</option>
+                                <option value="online">Online Delivery</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Time of Day</label>
+                        <select class="form-select" name="time_of_day">
+                            <option value="breakfast">Breakfast (6-10am)</option>
+                            <option value="mid-morning">Mid-Morning (10am-12pm)</option>
+                            <option value="lunch">Lunch (12-3pm)</option>
+                            <option value="afternoon">Afternoon (3-6pm)</option>
+                            <option value="evening">Evening (6-10pm)</option>
+                            <option value="late-night">Late Night (10pm-6am)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Section 4: Consumption Details -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="bi bi-clipboard2-data"></i> Consumption Details</h3>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Consumption (Select all that apply)</label>
+                        <div class="checkbox-group">
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="hunger">
+                                <label class="form-check-label">Hunger</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="thirst">
+                                <label class="form-check-label">Thirst</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="social">
+                                <label class="form-check-label">Socializing</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="stress">
+                                <label class="form-check-label">Stress/Emotional</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="convenience">
+                                <label class="form-check-label">Convenience</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="reason" value="craving">
+                                <label class="form-check-label">Craving</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Who were you with?</label>
+                        <div class="checkbox-group">
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="companions" value="alone">
+                                <label class="form-check-label">Alone</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="companions" value="family">
+                                <label class="form-check-label">Family</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="companions" value="friends">
+                                <label class="form-check-label">Friends</label>
+                            </div>
+                            <div class="form-check checkbox-option">
+                                <input class="form-check-input" type="checkbox" name="companions" value="colleagues">
+                                <label class="form-check-label">Colleagues</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit"

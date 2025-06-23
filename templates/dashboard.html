@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | OOH Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --warning-color: #f6c23e;
+            --info-color: #36b9cc;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 220px;
+            padding-top: 1.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            z-index: 1000;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+        
+        .sidebar-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            object-fit: contain;
+            background-color: white;
+            padding: 5px;
+        }
+        
+        .sidebar-brand-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-align: center;
+        }
+        
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 1rem 1rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+            padding: 0 1rem;
+        }
+        
+        .sidebar-nav-item {
+            position: relative;
+        }
+        
+        .sidebar-nav-link {
+            height: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .sidebar-nav-icon {
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+        }
+        
+        .content {
+            margin-left: 220px;
+            padding: 2rem;
+        }
+        
+        .welcome-message {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+        
+        .welcome-message h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .welcome-message p {
+            color: #5a5c69;
+            margin-bottom: 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1.25rem;
+            font-weight: 700;
+            color: #4e73df;
+        }
+        
+        .card-body {
+            padding: 1.25rem;
+        }
+        
+        .stat-card {
+            border-left: 0.25rem solid;
+        }
+        
+        .stat-card.primary {
+            border-left-color: var(--primary-color);
+        }
+        
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .stat-card.info {
+            border-left-color: var(--info-color);
+        }
+        
+        .stat-card .stat-card-title {
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        
+        .stat-card .stat-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .stat-card .stat-card-icon {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            opacity: 0.4;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #858796;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #4e73df;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+        }
+        
+        .badge {
+            border-radius: 10rem;
+            padding: 0.5em 0.75em;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="sidebar-logo">
+            <div class="sidebar-brand-text">OOH Tracker</div>
+        </a>
+        
+        <hr class="sidebar-divider">
+        
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-nav-link active">
+                    <i class="sidebar-nav-icon bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('track') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-plus-circle"></i>
+                    <span>Track Consumption</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('instructions') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-info-circle"></i>
+                    <span>Instructions</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="{{ url_for('logout') }}" class="sidebar-nav-link">
+                    <i class="sidebar-nav-icon bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Welcome Message -->
+        <div class="welcome-message">
+            <h1>Welcome, {{ user_name }}!</h1>
+            <p>Here's your consumption overview</p>
+        </div>
+        
+        <!-- Stats Cards Row -->
+        <div class="row mb-4">
+            <!-- Total Entries Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card primary h-100">
+                    <div class="card-body">
+                        <div class="stat-card-title">Total Entries</div>
+                        <div class="stat-card-value py-3">{{ total_entries }}</div>
+                        <i class="bi bi-journal-text stat-card-icon text-primary"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Unique Brands Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card success h-100">
+                    <div class="card-body">
+                        <div class="stat-card-title">Unique Brands</div>
+                        <div class="stat-card-value py-3">{{ unique_brands }}</div>
+                        <i class="bi bi-tags stat-card-icon text-success"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Location Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card warning h-100">
+                    <div class="card-body">
+                        <div class="stat-card-title">Most Frequent Location</div>
+                        <div class="stat-card-value py-3">{{ top_location }}</div>
+                        <i class="bi bi-geo-alt stat-card-icon text-warning"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Average Rating Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card info h-100">
+                    <div class="card-body">
+                        <div class="stat-card-title">Average Rating</div>
+                        <div class="stat-card-value py-3">{{ avg_rating }}/5</div>
+                        <i class="bi bi-star stat-card-icon text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activities Table -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Activities</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Price</th>
+                                <th>Rating</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activities %}
+                            <tr>
+                                <td>{{ activity[0] }}</td>
+                                <td>{{ activity[1] }}</td>
+                                <td>{{ activity[2] }}</td>
+                                <td>₦{{ "%.2f"|format(activity[3]) }}</td>
+                                <td>
+                                    <span class="badge bg-{% if activity[4]|int >= 4 %}success{% elif activity[4]|int >= 3 %}warning text-dark{% else %}danger{% endif %}">
+                                        {{ activity[4] }}/5
+                                    </span>
+                                </td>
+                                <td>{{ activity[5] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
