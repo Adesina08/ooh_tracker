@@ -4,41 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | OOH Tracker</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #4e73df;
-            --success-color: #1cc88a;
-            --warning-color: #f6c23e;
-            --info-color: #36b9cc;
+            --primary: #4e73df;
+            --secondary: #858796;
+            --success: #1cc88a;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
         }
-        
         body {
             background-color: #f8f9fc;
             font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
         }
-        
-        .sidebar {
-            background: linear-gradient(180deg, var(--primary-color) 0%, #224abe 100%);
-            color: white;
-            height: 100vh;
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 0.15rem 1.75rem rgba(33, 40, 50, 0.15);
             position: fixed;
-            width: 220px;
-            padding-top: 1.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            z-index: 1000;
+            top: 0;
+            width: 100%;
+            z-index: 1030;
         }
-        
+        .navbar-brand img {
+            border-radius: 50%;
+            border: 2px solid rgba(78, 115, 223, 0.2);
+            background-color: white;
+            padding: 3px;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 220px;
+            z-index: 1000;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
         .sidebar-brand {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-decoration: none;
-            margin-bottom: 2rem;
-            padding: 0 1rem;
+            margin-bottom: 1rem;
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
         .sidebar-logo {
             width: 80px;
             height: 80px;
@@ -49,28 +64,18 @@
             background-color: white;
             padding: 5px;
         }
-        
         .sidebar-brand-text {
             color: white;
             font-size: 1.2rem;
             font-weight: 800;
-            text-align: center;
         }
-        
-        .sidebar-divider {
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            margin: 1rem 1rem;
-        }
-        
         .sidebar-nav {
             list-style: none;
             padding: 0 1rem;
         }
-        
         .sidebar-nav-item {
-            position: relative;
+            margin-bottom: 0.5rem;
         }
-        
         .sidebar-nav-link {
             height: 3rem;
             color: rgba(255, 255, 255, 0.8);
@@ -80,144 +85,148 @@
             padding: 0.75rem 1rem;
             border-radius: 0.35rem;
             transition: all 0.3s;
-            margin-bottom: 0.5rem;
         }
-        
-        .sidebar-nav-link:hover {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        
+        .sidebar-nav-link:hover,
         .sidebar-nav-link.active {
             color: white;
             background-color: rgba(255, 255, 255, 0.2);
         }
-        
         .sidebar-nav-icon {
             font-size: 1.1rem;
             margin-right: 0.5rem;
+            width: 24px;
+            text-align: center;
         }
-        
+        .offcanvas {
+            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            color: white;
+        }
+        .offcanvas .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+        }
+        .offcanvas .nav-link:hover,
+        .offcanvas .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .offcanvas .nav-icon {
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+            width: 24px;
+            text-align: center;
+        }
         .content {
-            margin-left: 220px;
-            padding: 2rem;
+            padding: 1.5rem;
         }
-        
-        .welcome-message {
+        .stat-card {
             background: white;
             border-radius: 0.5rem;
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            text-align: center;
         }
-        
-        .welcome-message h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary-color);
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            color: var(--primary);
             margin-bottom: 0.5rem;
         }
-        
-        .welcome-message p {
+        .stat-card .stat-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+        }
+        .stat-card .stat-label {
             color: #5a5c69;
-            margin-bottom: 0;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 0.35rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
-            overflow: hidden;
-        }
-        
-        .card-header {
-            background-color: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-            padding: 1.25rem;
-            font-weight: 700;
-            color: #4e73df;
-        }
-        
-        .card-body {
-            padding: 1.25rem;
-        }
-        
-        .stat-card {
-            border-left: 0.25rem solid;
-        }
-        
-        .stat-card.primary {
-            border-left-color: var(--primary-color);
-        }
-        
-        .stat-card.success {
-            border-left-color: var(--success-color);
-        }
-        
-        .stat-card.warning {
-            border-left-color: var(--warning-color);
-        }
-        
-        .stat-card.info {
-            border-left-color: var(--info-color);
-        }
-        
-        .stat-card .stat-card-title {
+            font-size: 0.9rem;
             text-transform: uppercase;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #5a5c69;
+            letter-spacing: 0.1rem;
         }
-        
-        .stat-card .stat-card-value {
-            font-size: 1.5rem;
-            font-weight: 700;
+        .recent-activity {
+            border-left: 3px solid var(--primary);
+            padding-left: 1rem;
+            margin-bottom: 1rem;
         }
-        
-        .stat-card .stat-card-icon {
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-            font-size: 2rem;
-            opacity: 0.4;
-        }
-        
         .table-responsive {
             overflow-x: auto;
         }
-        
-        .table {
-            width: 100%;
-            margin-bottom: 1rem;
-            color: #858796;
+        @media (min-width: 992px) {
+            .navbar {
+                display: none;
+            }
+            .content {
+                margin-left: 220px;
+            }
+            body {
+                padding-top: 0;
+            }
         }
-        
-        .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #4e73df;
-            text-transform: uppercase;
-            font-size: 0.7rem;
+        @media (max-width: 991px) {
+            .sidebar {
+                display: none;
+            }
+            .content {
+                padding: 1rem;
+                margin-left: 0;
+            }
+            body {
+                padding-top: 56px;
+            }
+            .stat-card {
+                padding: 1rem;
+            }
+            .stat-card .stat-value {
+                font-size: 1.5rem;
+            }
+            .stat-card .stat-label {
+                font-size: 0.8rem;
+            }
         }
-        
-        .badge {
-            border-radius: 10rem;
-            padding: 0.5em 0.75em;
-            font-weight: 700;
-            font-size: 0.8rem;
+        @media (max-width: 576px) {
+            .stat-card .stat-value {
+                font-size: 1.25rem;
+            }
+            .stat-card .stat-label {
+                font-size: 0.75rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .table {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar Navigation -->
+    <!-- Navbar (Small Screens) -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" width="30" class="d-inline-block align-text-top">
+                OOH Tracker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar (Large Screens) -->
     <div class="sidebar">
         <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
             <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="sidebar-logo">
             <div class="sidebar-brand-text">OOH Tracker</div>
         </a>
-        
-        <hr class="sidebar-divider">
-        
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="{{ url_for('dashboard') }}" class="sidebar-nav-link active">
@@ -237,110 +246,184 @@
                     <span>Instructions</span>
                 </a>
             </li>
-            <li class="sidebar-nav-item">
-                <a href="{{ url_for('logout') }}" class="sidebar-nav-link">
-                    <i class="sidebar-nav-icon bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </a>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
             </li>
         </ul>
     </div>
-    
-    <!-- Main Content -->
+
+    <!-- Offcanvas Menu (Small Screens) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasMenuLabel">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" width="40" class="me-2">
+                OOH Tracker
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('instructions') }}"><i class="nav-icon bi bi-info-circle"></i>Instructions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}"><i class="nav-icon bi bi-box-arrow-right"></i>Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Content -->
     <div class="content">
-        <!-- Welcome Message -->
-        <div class="welcome-message">
-            <h1>Welcome, {{ user_name }}!</h1>
-            <p>Here's your consumption overview</p>
-        </div>
-        
-        <!-- Stats Cards Row -->
-        <div class="row mb-4">
-            <!-- Total Entries Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card stat-card primary h-100">
-                    <div class="card-body">
-                        <div class="stat-card-title">Total Entries</div>
-                        <div class="stat-card-value py-3">{{ total_entries }}</div>
-                        <i class="bi bi-journal-text stat-card-icon text-primary"></i>
+        <div class="container-fluid">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <h3 class="mb-4">Welcome, {{ user_name }}!</h3>
+
+            <!-- Stats Cards -->
+            <div class="row g-3">
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+                        <div class="stat-value">{{ total_entries }}</div>
+                        <div class="stat-label">Total Entries</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-tags"></i></div>
+                        <div class="stat-value">{{ unique_brands }}</div>
+                        <div class="stat-label">Unique Brands</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                        <div class="stat-value">₦{{ "%.2f"|format(avg_spending if avg_spending is not none else 0) }}</div>
+                        <div class="stat-label">Avg. Spending</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="bi bi-shop"></i></div>
+                        <div class="stat-value">{{ locations_visited }}</div>
+                        <div class="stat-label">Locations Visited</div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Unique Brands Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card stat-card success h-100">
-                    <div class="card-body">
-                        <div class="stat-card-title">Unique Brands</div>
-                        <div class="stat-card-value py-3">{{ unique_brands }}</div>
-                        <i class="bi bi-tags stat-card-icon text-success"></i>
+
+            <!-- Top Purchase Location and Recent Activities -->
+            <div class="row g-3 mt-3">
+                <div class="col-lg-6 col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-geo-alt me-2"></i>Top Purchase Location</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>{{ top_purchase_location if top_purchase_location is not none else 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-clock-history me-2"></i>Recent Activities</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_activities %}
+                                {% for activity in recent_activities %}
+                                <div class="recent-activity">
+                                    <h6><i class="bi bi-tag me-1"></i>{{ activity[2] }} ({{ activity[3] }})</h6>
+                                    <p class="mb-1">
+                                        <i class="bi bi-grid me-1"></i><strong>Category:</strong> {{ activity[1] }}<br>
+                                        <i class="bi bi-currency-dollar me-1"></i><strong>Amount:</strong> ₦{{ "%.2f"|format(activity[4]) }}<br>
+                                        <i class="bi bi-geo-alt me-1"></i><strong>Where:</strong> {{ activity[6] }}<br>
+                                        <i class="bi bi-people me-1"></i><strong>With:</strong> {{ activity[7] }}<br>
+                                        <i class="bi bi-plus-circle me-1"></i><strong>Additional Items:</strong> {{ activity[9] }}<br>
+                                        <small class="text-muted"><i class="bi bi-calendar me-1"></i>{{ activity[8] }}</small>
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No recent activities</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Top Location Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card stat-card warning h-100">
-                    <div class="card-body">
-                        <div class="stat-card-title">Most Frequent Location</div>
-                        <div class="stat-card-value py-3">{{ top_location }}</div>
-                        <i class="bi bi-geo-alt stat-card-icon text-warning"></i>
+
+            <!-- Consumption by Category -->
+            <div class="row g-3 mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart me-2"></i>Consumption by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="bi bi-grid"></i> Category</th>
+                                            <th><i class="bi bi-list-ol"></i> Count</th>
+                                            <th><i class="bi bi-cash-stack"></i> Total Spent</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if consumption_by_category %}
+                                            {% for category in consumption_by_category %}
+                                            <tr>
+                                                <td>{{ category.product_category }}</td>
+                                                <td>{{ category.count }}</td>
+                                                <td>₦{{ "%.2f"|format(category.total_spent) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="3" class="text-center">No consumption data</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Average Rating Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card stat-card info h-100">
-                    <div class="card-body">
-                        <div class="stat-card-title">Average Rating</div>
-                        <div class="stat-card-value py-3">{{ avg_rating }}/5</div>
-                        <i class="bi bi-star stat-card-icon text-info"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recent Activities Table -->
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Activities</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Brand</th>
-                                <th>Type</th>
-                                <th>Location</th>
-                                <th>Price</th>
-                                <th>Rating</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in recent_activities %}
-                            <tr>
-                                <td>{{ activity[0] }}</td>
-                                <td>{{ activity[1] }}</td>
-                                <td>{{ activity[2] }}</td>
-                                <td>₦{{ "%.2f"|format(activity[3]) }}</td>
-                                <td>
-                                    <span class="badge bg-{% if activity[4]|int >= 4 %}success{% elif activity[4]|int >= 3 %}warning text-dark{% else %}danger{% endif %}">
-                                        {{ activity[4] }}/5
-                                    </span>
-                                </td>
-                                <td>{{ activity[5] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Adjust content margin on resize
+        window.addEventListener('resize', () => {
+            const content = document.querySelector('.content');
+            if (window.innerWidth >= 992) {
+                content.style.marginLeft = '220px';
+            } else {
+                content.style.marginLeft = '0';
+            }
+        });
+        // Initial adjustment
+        if (window.innerWidth >= 992) {
+            document.querySelector('.content').style.marginLeft = '220px';
+        }
+    </script>
 </body>
 </html>

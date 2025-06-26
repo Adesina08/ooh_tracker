@@ -10,23 +10,37 @@
         body {
             background-image: url('/static/background.jpg'); /* Update with your image path */
             background-size: cover;
-            /*background-position: center;*/
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333; /* Default text color */
         }
         .hero-section {
             /*background: rgba(78, 115, 223, 0.8); /* Semi-transparent background for readability */
-            color: blue;
+            color: #4e73df; /* Change text color to white for better contrast */
             padding: 5rem 0;
             border-radius: 0 0 20px 20px;
             margin-bottom: 3rem;
         }
-        .btn-outline-light:hover {
-            color: #4e73df;
+        .btn-custom {
+            background-color: #87CEEB; /* Light blue background color */
+            color: #4e73df; /* Blue text color */
+            border: none; /* Remove border */
+        }
+        .btn-custom:hover {
+            background-color: white; /* Darker sky blue on hover */
+            color: #4e73df; /* Change text color to white on hover */
+        }
+        .btn-outline-custom {
+            border: 2px solid #87CEEB; /* Light blue border color */
+            color: #4e73df; /* Blue text color */
+            background-color: transparent; /* Transparent background */
+        }
+        .btn-outline-custom:hover {
+            background-color: white; /* Light background on hover */
+            color: #00BFFF; /* Change text color to darker sky blue on hover */
         }
         .feature-icon {
             font-size: 2.5rem;
-            color: #4e73df;
+            color: white;
             margin-bottom: 1rem;
         }
         .card {
@@ -39,9 +53,9 @@
             transform: translateY(-5px);
         }
         .logo {
-        display: block;
-        margin: 0 auto 1rem;
-        width: 200px; /* Adjust logo size */
+            display: block;
+            margin: 0 auto 1rem;
+            width: 200px; /* Adjust logo size */
         }
     </style>
 </head>
@@ -53,8 +67,8 @@
             <h1 class="display-4 fw-bold mb-4">OOH Consumption Tracker</h1>
             <p class="lead mb-5">Track your out-of-home consumption patterns with ease</p>
             <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
-                <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg px-4">Register</a>
+                <a href="{{ url_for('login') }}" class="btn btn-custom btn-lg px-4 gap-3">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-custom btn-lg px-4">Register</a>
             </div>
         </div>
     </div>

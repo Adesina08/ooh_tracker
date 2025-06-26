@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Consumption | OOH Tracker</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -14,14 +15,25 @@
             --warning: #f6c23e;
             --danger: #e74a3b;
         }
-        
         body {
             background-color: #f8f9fc;
-            font-family: 'Nunito', sans-serif;
-            padding-top: 56px; /* Adjust for fixed navbar */
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
         }
-        
-        /* Sidebar Styles */
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 0.15rem 1.75rem rgba(33, 40, 50, 0.15);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+        .navbar-brand img {
+            border-radius: 50%;
+            border: 2px solid rgba(78, 115, 223, 0.2);
+            background-color: white;
+            padding: 3px;
+        }
         .sidebar {
             background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
             color: white;
@@ -33,15 +45,14 @@
             z-index: 1000;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         }
-        
         .sidebar-brand {
             display: flex;
             flex-direction: column;
             align-items: center;
+            text-decoration: none;
             padding: 1.5rem 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-        
         .sidebar-logo {
             width: 80px;
             height: 80px;
@@ -52,82 +63,94 @@
             background-color: white;
             padding: 5px;
         }
-        
+        .sidebar-brand-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
         .sidebar-nav {
             list-style: none;
-            padding: 1rem;
+            padding: 0 1rem;
         }
-        
         .sidebar-nav-item {
             margin-bottom: 0.5rem;
         }
-        
         .sidebar-nav-link {
+            height: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
             display: flex;
             align-items: center;
-            padding: 0.75rem;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
+            padding: 0.75rem 1rem;
             border-radius: 0.35rem;
             transition: all 0.3s;
         }
-        
-        .sidebar-nav-link:hover, .sidebar-nav-link.active {
-            background-color: rgba(255,255,255,0.2);
+        .sidebar-nav-link:hover,
+        .sidebar-nav-link.active {
             color: white;
+            background-color: rgba(255, 255, 255, 0.2);
         }
-        
         .sidebar-nav-icon {
+            font-size: 1.1rem;
             margin-right: 0.5rem;
             width: 24px;
             text-align: center;
         }
-        
-        /* Main Content */
-        .content {
-            margin-left: 220px;
-            padding: 2rem;
+        .offcanvas {
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
+            color: white;
         }
-        
-        /* Form Styles */
+        .offcanvas .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+        }
+        .offcanvas .nav-link:hover,
+        .offcanvas .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .offcanvas .nav-icon {
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+            width: 24px;
+            text-align: center;
+        }
+        .content {
+            padding: 1.5rem;
+        }
         .tracking-form {
             background: white;
             border-radius: 0.5rem;
             padding: 2rem;
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         }
-        
         .form-section {
             margin-bottom: 2rem;
             padding-bottom: 1.5rem;
             border-bottom: 1px solid #e3e6f0;
         }
-        
         .form-section:last-child {
             border-bottom: none;
             margin-bottom: 0;
             padding-bottom: 0;
         }
-        
         .section-title {
             color: var(--primary);
             margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
         }
-        
         .section-title i {
             margin-right: 10px;
         }
-        
-        /* Media Capture */
         .media-capture-container {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
-        
         .capture-btn {
             flex: 1;
             min-width: 200px;
@@ -141,25 +164,21 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
         .capture-btn:hover {
             border-color: var(--primary);
             background-color: rgba(78, 115, 223, 0.05);
         }
-        
         .capture-btn i {
             font-size: 2rem;
             margin-bottom: 0.5rem;
             color: var(--primary);
         }
-        
         .media-preview {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
             margin-top: 1rem;
         }
-        
         .media-item {
             position: relative;
             width: 150px;
@@ -167,13 +186,11 @@
             border-radius: 0.5rem;
             overflow: hidden;
         }
-        
-        .media-item img, .media-item video {
+        .media-item img, .media-item video, .media-item audio {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
         .remove-media {
             position: absolute;
             top: 5px;
@@ -188,8 +205,6 @@
             justify-content: center;
             cursor: pointer;
         }
-        
-        /* Location Capture */
         .location-status {
             padding: 0.75rem;
             border-radius: 0.35rem;
@@ -197,37 +212,29 @@
             display: flex;
             align-items: center;
         }
-        
         .location-status i {
             margin-right: 0.5rem;
         }
-        
         .status-waiting {
             background-color: #fff3cd;
             color: #856404;
         }
-        
         .status-success {
             background-color: #d4edda;
             color: #155724;
         }
-        
         .status-error {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
-        /* Form Elements */
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
         .checkbox-option {
             flex: 1 0 45%;
         }
-        
         .range-labels {
             display: flex;
             justify-content: space-between;
@@ -235,253 +242,646 @@
             font-size: 0.85rem;
             color: var(--secondary);
         }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 80px;
-            }
-            .sidebar-brand-text, .sidebar-nav-text {
+        @media (min-width: 992px) {
+            .navbar {
                 display: none;
             }
             .content {
-                margin-left: 80px;
+                margin-left: 220px;
+            }
+            body {
+                padding-top: 0;
+            }
+        }
+        @media (max-width: 991px) {
+            .sidebar {
+                display: none;
+            }
+            .content {
+                padding: 1rem;
+                margin-left: 0;
+            }
+            body {
+                padding-top: 56px;
+            }
+            .capture-btn {
+                min-width: 150px;
+                height: 120px;
+            }
+            .capture-btn i {
+                font-size: 1.5rem;
+            }
+            .tracking-form {
+                padding: 1.5rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .capture-btn {
+                min-width: 100%;
+                height: 100px;
+            }
+            .capture-btn i {
+                font-size: 1.25rem;
+            }
+            .tracking-form {
+                padding: 1rem;
+            }
+            .form-section {
+                padding-bottom: 1rem;
+                margin-bottom: 1rem;
+            }
+            .section-title {
+                font-size: 1.25rem;
+            }
+            .form-label {
+                font-size: 0.9rem;
+            }
+            .form-control, .form-select {
+                font-size: 0.85rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar Navigation -->
+    <!-- Navbar (Small Screens) -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" width="30" class="d-inline-block align-text-top">
+                OOH Tracker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar (Large Screens) -->
     <div class="sidebar">
         <a href="{{ url_for('dashboard') }}" class="sidebar-brand">
             <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Company Logo" class="sidebar-logo">
             <div class="sidebar-brand-text">OOH Tracker</div>
         </a>
-        
         <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
                 <a href="{{ url_for('dashboard') }}" class="sidebar-nav-link">
                     <i class="sidebar-nav-icon bi bi-speedometer2"></i>
-                    <span class="sidebar-nav-text">Dashboard</span>
+                    <span>Dashboard</span>
                 </a>
             </li>
             <li class="sidebar-nav-item">
                 <a href="{{ url_for('track') }}" class="sidebar-nav-link active">
                     <i class="sidebar-nav-icon bi bi-plus-circle"></i>
-                    <span class="sidebar-nav-text">Track Consumption</span>
+                    <span>Track Consumption</span>
                 </a>
             </li>
             <li class="sidebar-nav-item">
                 <a href="{{ url_for('instructions') }}" class="sidebar-nav-link">
                     <i class="sidebar-nav-icon bi bi-info-circle"></i>
-                    <span class="sidebar-nav-text">Instructions</span>
+                    <span>Instructions</span>
                 </a>
             </li>
             <li class="sidebar-nav-item">
                 <a href="{{ url_for('logout') }}" class="sidebar-nav-link">
                     <i class="sidebar-nav-icon bi bi-box-arrow-right"></i>
-                    <span class="sidebar-nav-text">Logout</span>
+                    <span>Logout</span>
                 </a>
             </li>
         </ul>
     </div>
-    
+
+    <!-- Offcanvas Menu (Small Screens) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasMenuLabel">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" width="40" class="me-2">
+                OOH Tracker
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('instructions') }}"><i class="nav-icon bi bi-info-circle"></i>Instructions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}"><i class="nav-icon bi bi-box-arrow-right"></i>Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="content">
-        <div class="tracking-form">
-            <h2 class="mb-4">Track Your Consumption</h2>
-            
-            <form method="POST" enctype="multipart/form-data" id="consumptionForm">
-                <!-- Section 1: Media Capture -->
+        <div class="container-fluid">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="tracking-form">
+                <h2 class="mb-4">Track Your Consumption</h2>
+                <form method="POST" enctype="multipart/form-data" id="consumptionForm">
+                    <!-- Section 1: Media Capture -->
+               <!-- Section 1: Media Capture -->
                 <div class="form-section">
                     <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
                     <p class="text-muted">Capture photos, videos, or audio of your consumption</p>
-                    
                     <div class="media-capture-container">
-                        <!-- Photo Capture -->
                         <div class="capture-btn" id="photoCaptureBtn">
                             <i class="bi bi-camera-fill"></i>
                             <span>Take Photo</span>
-                            <input type="file" id="photoInput" accept="image/*" capture="environment" style="display: none;">
+                            <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
                         </div>
-                        
-                        <!-- Video Capture -->
                         <div class="capture-btn" id="videoCaptureBtn">
                             <i class="bi bi-camera-video-fill"></i>
                             <span>Record Video</span>
-                            <input type="file" id="videoInput" accept="video/*" capture="environment" style="display: none;">
+                            <input type="file" id="videoInput" name="video" accept="video/*" capture="environment" style="display: none;">
                         </div>
-                        
-                        <!-- Audio Capture -->
                         <div class="capture-btn" id="audioCaptureBtn">
                             <i class="bi bi-mic-fill"></i>
                             <span>Record Audio</span>
-                            <input type="file" id="audioInput" accept="audio/*" capture="environment" style="display: none;">
+                            <input type="file" id="audioInput" name="audio" accept="audio/*" capture="microphone" style="display: none;">
                         </div>
                     </div>
-                    
-                    <div class="media-preview" id="mediaPreview">
-                        <!-- Media previews will appear here -->
-                    </div>
-                </div>
-                
-                <!-- Section 2: Product Information -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Food Type</label>
-                            <select class="form-select" name="food_type" required>
-                                <option value="" selected disabled>Select type</option>
-                                <option value="snack">Snack</option>
-                                <option value="noodles">Noodles</option>
-                                <option value="beverage">Beverage</option>
-                                <option value="meal">Meal</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Brand Name</label>
-                            <input type="text" class="form-control" name="brand" required>
+                    <div class="media-preview" id="mediaPreview"></div>
+                    <div id="mediaError" class="text-danger" style="display: none;"></div>
+                    <!-- Video recording preview (hidden by default) -->
+                    <div id="videoPreviewContainer" style="display: none; margin-top: 1rem;">
+                        <video id="videoPreview" width="100%" height="auto" autoplay></video>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-primary" id="startVideoBtn" style="display: none;">Start Recording</button>
+                            <button class="btn btn-danger" id="stopVideoBtn" style="display: none;">Stop Recording</button>
                         </div>
                     </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Price (₦)</label>
-                            <input type="number" step="0.01" class="form-control" name="price" required>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Packaging Type</label>
-                            <select class="form-select" name="packaging_type" required>
-                                <option value="" selected disabled>Select packaging</option>
-                                <option value="bottle">Bottle</option>
-                                <option value="can">Can</option>
-                                <option value="pouch">Pouch</option>
-                                <option value="wrapper">Wrapper</option>
-                                <option value="cup">Cup</option>
-                                <option value="other">Other</option>
-                            </select>
+                    <!-- Audio recording controls (hidden by default) -->
+                    <div id="audioPreviewContainer" style="display: none; margin-top: 1rem;">
+                        <p id="audioStatus">Ready to record audio</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="startAudioBtn" style="display: none;">Start Recording</button>
+                            <button class="btn btn-danger" id="stopAudioBtn" style="display: none;">Stop Recording</button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Section 3: Location & Context -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="bi bi-geo-alt"></i> Location & Context</h3>
-                    
-                    <button type="button" class="btn btn-primary" id="getLocationBtn">
-                        <i class="bi bi-geo-alt-fill"></i> Capture Current Location
-                    </button>
-                    
-                    <div id="locationStatus" class="location-status status-waiting">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span>Location not captured yet</span>
-                    </div>
-                    
-                    <input type="hidden" id="latitude" name="latitude">
-                    <input type="hidden" id="longitude" name="longitude">
-                    <input type="hidden" id="accuracy" name="accuracy">
-                    
-                    <div class="row mt-3">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Location Type</label>
-                            <select class="form-select" name="location_type" required>
-                                <option value="" selected disabled>Select location type</option>
-                                <option value="work">Workplace</option>
-                                <option value="school">School</option>
-                                <option value="transport">Transportation</option>
-                                <option value="social">Social Gathering</option>
-                                <option value="home">Home</option>
-                            </select>
+                    <!-- Section 2: Product Information -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Category</label>
+                                <select class="form-select" name="product_category" required>
+                                    <option value="" selected disabled>Select category</option>
+                                    <option value="snack">Snack</option>
+                                    <option value="meal">Meal</option>
+                                    <option value="beverage">Beverage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand" required>
+                                    <option value="" selected disabled>Select brand</option>
+                                    <option value="brand1">Brand 1</option>
+                                    <option value="brand2">Brand 2</option>
+                                    <option value="brand3">Brand 3</option>
+                                </select>
+                            </div>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Purchase Location</label>
-                            <select class="form-select" name="purchase_location" required>
-                                <option value="" selected disabled>Where did you buy this?</option>
-                                <option value="convenience">Convenience Store</option>
-                                <option value="supermarket">Supermarket</option>
-                                <option value="street">Street Vendor</option>
-                                <option value="restaurant">Restaurant/Cafe</option>
-                                <option value="vending">Vending Machine</option>
-                                <option value="online">Online Delivery</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Time of Day</label>
-                        <select class="form-select" name="time_of_day">
-                            <option value="breakfast">Breakfast (6-10am)</option>
-                            <option value="mid-morning">Mid-Morning (10am-12pm)</option>
-                            <option value="lunch">Lunch (12-3pm)</option>
-                            <option value="afternoon">Afternoon (3-6pm)</option>
-                            <option value="evening">Evening (6-10pm)</option>
-                            <option value="late-night">Late Night (10pm-6am)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Section 4: Consumption Details -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="bi bi-clipboard2-data"></i> Consumption Details</h3>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Reason for Consumption (Select all that apply)</label>
-                        <div class="checkbox-group">
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="hunger">
-                                <label class="form-check-label">Hunger</label>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">SKU</label>
+                                <select class="form-select" name="sku" required>
+                                    <option value="" selected disabled>Select SKU size</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
                             </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="thirst">
-                                <label class="form-check-label">Thirst</label>
-                            </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="social">
-                                <label class="form-check-label">Socializing</label>
-                            </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="stress">
-                                <label class="form-check-label">Stress/Emotional</label>
-                            </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="convenience">
-                                <label class="form-check-label">Convenience</label>
-                            </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="reason" value="craving">
-                                <label class="form-check-label">Craving</label>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount Paid (₦)</label>
+                                <input type="number" step="0.01" class="form-control" name="amount_paid" required>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Who were you with?</label>
-                        <div class="checkbox-group">
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="companions" value="alone">
-                                <label class="form-check-label">Alone</label>
+
+                    <!-- Section 3: Purchase and Consumption Context -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Purchase and Consumption Context</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Purchase</label>
+                                <select class="form-select" name="purchase_location" required>
+                                    <option value="" selected disabled>Select outlet type</option>
+                                    <option value="supermarket">Supermarket</option>
+                                    <option value="convenience_store">Convenience Store</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="online">Online</option>
+                                </select>
                             </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="companions" value="family">
-                                <label class="form-check-label">Family</label>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Consume</label>
+                                <select class="form-select" name="consume_location" required>
+                                    <option value="" selected disabled>Select location</option>
+                                    <option value="home">At Home</option>
+                                    <option value="work">At Work</option>
+                                    <option value="play">At Play</option>
+                                    <option value="school">At School</option>
+                                </select>
                             </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="companions" value="friends">
-                                <label class="form-check-label">Friends</label>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">With Whom</label>
+                                <select class="form-select" name="with_whom" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="alone">Alone</option>
+                                    <option value="with_others">With Others</option>
+                                </select>
                             </div>
-                            <div class="form-check checkbox-option">
-                                <input class="form-check-input" type="checkbox" name="companions" value="colleagues">
-                                <label class="form-check-label">Colleagues</label>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">With What</label>
+                                <select class="form-select" name="with_what" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit"
+
+                    <!-- Section 4: Additional Product Information -->
+                    <div class="form-section" id="additionalProductInfo" style="display: none;">
+                        <h3 class="section-title"><i class="bi bi-tag"></i> Additional Product Information</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Category</label>
+                                <select class="form-select" name="additional_product_category">
+                                    <option value="" selected disabled>Select category</option>
+                                    <option value="snack">Snack</option>
+                                    <option value="meal">Meal</option>
+                                    <option value="beverage">Beverage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="additional_brand">
+                                    <option value="" selected disabled>Select brand</option>
+                                    <option value="brand1">Brand 1</option>
+                                    <option value="brand2">Brand 2</option>
+                                    <option value="brand3">Brand 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">SKU</label>
+                                <select class="form-select" name="additional_sku">
+                                    <option value="" selected disabled>Select SKU size</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount Paid (₦)</label>
+                                <input type="number" step="0.01" class="form-control" name="additional_amount_paid">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Purchase</label>
+                                <select class="form-select" name="additional_purchase_location">
+                                    <option value="" selected disabled>Select outlet type</option>
+                                    <option value="supermarket">Supermarket</option>
+                                    <option value="convenience_store">Convenience Store</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Geolocation Capture -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
+                        <button type="button" class="btn btn-primary" id="getLocationBtn">
+                            <i class="bi bi-geo-alt-fill"></i> Capture Current Location
+                        </button>
+                        <div id="locationStatus" class="location-status status-waiting">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Location not captured yet</span>
+                        </div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <input type="hidden" id="accuracy" name="accuracy">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Submit Consumption</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js">
+    // Adjust content margin on resize
+window.addEventListener('resize', () => {
+    const content = document.querySelector('.content');
+    if (window.innerWidth >= 992) {
+        content.style.marginLeft = '220px';
+    } else {
+        content.style.marginLeft = '0';
+    }
+});
+if (window.innerWidth >= 992) {
+    document.querySelector('.content').style.marginLeft = '220px';
+}
+
+// Show/hide additional product info
+document.querySelector('select[name="with_what"]').addEventListener('change', function() {
+    const additionalSection = document.getElementById('additionalProductInfo');
+    additionalSection.style.display = this.value === 'yes' ? 'block' : 'none';
+});
+
+// Media capture functionality
+const photoInput = document.getElementById('photoInput');
+const videoInput = document.getElementById('videoInput');
+const audioInput = document.getElementById('audioInput');
+const mediaPreview = document.getElementById('mediaPreview');
+const mediaError = document.getElementById('mediaError');
+const videoPreview = document.getElementById('videoPreview');
+const videoPreviewContainer = document.getElementById('videoPreviewContainer');
+const startVideoBtn = document.getElementById('startVideoBtn');
+const stopVideoBtn = document.getElementById('stopVideoBtn');
+const audioPreviewContainer = document.getElementById('audioPreviewContainer');
+const startAudioBtn = document.getElementById('startAudioBtn');
+const stopAudioBtn = document.getElementById('stopAudioBtn');
+const audioStatus = document.getElementById('audioStatus');
+
+let mediaRecorder;
+let recordedChunks = [];
+let stream;
+
+// Helper function to display errors
+function showError(message) {
+    mediaError.textContent = message;
+    mediaError.style.display = 'block';
+}
+
+// Helper function to clear errors
+function clearError() {
+    mediaError.textContent = '';
+    mediaError.style.display = 'none';
+}
+
+// Photo capture
+document.getElementById('photoCaptureBtn').addEventListener('click', function() {
+    clearError();
+    photoInput.click();
+});
+
+photoInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const mediaItem = document.createElement('div');
+            mediaItem.classList.add('media-item');
+            mediaItem.innerHTML = `<img src="${e.target.result}" alt="Photo Preview">
+                                 <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+            mediaPreview.appendChild(mediaItem);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Video capture with WebRTC fallback
+document.getElementById('videoCaptureBtn').addEventListener('click', async function() {
+    clearError();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            videoPreview.srcObject = stream;
+            videoPreviewContainer.style.display = 'block';
+            startVideoBtn.style.display = 'inline-block';
+            stopVideoBtn.style.display = 'none';
+        } catch (err) {
+            showError('Failed to access camera. Please ensure permissions are granted or use file upload.');
+            videoInput.click();
+        }
+    } else {
+        showError('Camera not supported. Please use file upload.');
+        videoInput.click();
+    }
+});
+
+startVideoBtn.addEventListener('click', function() {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) {
+            recordedChunks.push(e.data);
+        }
+    };
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoURL = URL.createObjectURL(blob);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="video/webm"></video>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+
+        // Add to form data
+        const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        videoInput.files = dataTransfer.files;
+
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        videoPreview.srcObject = null;
+        videoPreviewContainer.style.display = 'none';
+        startVideoBtn.style.display = 'none';
+        stopVideoBtn.style.display = 'none';
+    };
+    mediaRecorder.start();
+    startVideoBtn.style.display = 'none';
+    stopVideoBtn.style.display = 'inline-block';
+});
+
+stopVideoBtn.addEventListener('click', function() {
+    mediaRecorder.stop();
+});
+
+// Audio capture with WebRTC fallback
+document.getElementById('audioCaptureBtn').addEventListener('click', async function() {
+    clearError();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioPreviewContainer.style.display = 'block';
+            audioStatus.textContent = 'Ready to record audio';
+            startAudioBtn.style.display = 'inline-block';
+            stopAudioBtn.style.display = 'none';
+        } catch (err) {
+            showError('Failed to access microphone. Please ensure permissions are granted or use file upload.');
+            audioInput.click();
+        }
+    } else {
+        showError('Microphone not supported. Please use file upload.');
+        audioInput.click();
+    }
+});
+
+startAudioBtn.addEventListener('click', function() {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) {
+            recordedChunks.push(e.data);
+        }
+    };
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const audioURL = URL.createObjectURL(blob);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="audio/webm"></audio>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+
+        // Add to form data
+        const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        audioInput.files = dataTransfer.files;
+
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        audioPreviewContainer.style.display = 'none';
+        startAudioBtn.style.display = 'none';
+        stopAudioBtn.style.display = 'none';
+        audioStatus.textContent = 'Ready to record audio';
+    };
+    mediaRecorder.start();
+    audioStatus.textContent = 'Recording audio...';
+    startAudioBtn.style.display = 'none';
+    stopAudioBtn.style.display = 'inline-block';
+});
+
+stopAudioBtn.addEventListener('click', function() {
+    mediaRecorder.stop();
+});
+
+// Handle file input changes (fallback for browsers not supporting WebRTC)
+videoInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const videoURL = URL.createObjectURL(file);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="${file.type}"></video>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+    }
+});
+
+audioInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const audioURL = URL.createObjectURL(file);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="${file.type}"></audio>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+    }
+});
+
+// Geolocation capture
+document.getElementById('getLocationBtn').addEventListener('click', function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                document.getElementById('accuracy').value = position.coords.accuracy;
+                const statusElement = document.getElementById('locationStatus');
+                statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location captured successfully!';
+                statusElement.classList.remove('status-waiting', 'status-error');
+                statusElement.classList.add('status-success');
+            },
+            function(error) {
+                const statusElement = document.getElementById('locationStatus');
+                statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Unable to retrieve location.';
+                statusElement.classList.remove('status-waiting', 'status-success');
+                statusElement.classList.add('status-error');
+            }
+        );
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+});
+
+// Form submission handler
+document.getElementById('consumptionForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const requiredFields = this.querySelectorAll('[required]');
+    let isValid = true;
+    requiredFields.forEach(field => {
+        if (!field.value) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    if (!isValid) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    const formData = new FormData(this);
+    fetch('/api/submit-consumption-mysql', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Consumption recorded successfully!');
+            window.location.href = '/dashboard';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while submitting the form');
+    });
+});
+</script>
+</body>
+</html>
