@@ -8,3 +8,4 @@ whisper
 moviepy
 spacy
 python-dotenv
+gunicorn
