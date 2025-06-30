@@ -1,0 +1,8 @@
+{
+  "categories": {
+    "Beverages": ["Coca-Cola", "Pepsi", "Fanta", "Sprite"],
+    "Snacks": ["Lay's", "Pringles", "Doritos"],
+    "Fast Food": ["McDonald's", "KFC", "Burger King"],
+    "Other": []
+  }
+}

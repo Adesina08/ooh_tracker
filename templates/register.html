@@ -11,59 +11,148 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
             margin: 0;
+            background-color: #f0f0f0;
         }
 
         body::before {
             content: ""; 
-            position: fixed;           /* Stay in the background when scrolling */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-
             background-image: url('/static/background.jpg');
             background-size: cover;
             background-position: center;
-
             filter: blur(5px);
-            z-index: -1;              /* Stay behind the page content */
+            z-index: -1;
         }
 
         .register-container {
             max-width: 400px;
             margin: auto;
             padding: 2rem;
-            background: white;
+            background: #ffffff;
             border-radius: 0.5rem;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
         }
         .logo {
             display: block;
             margin: 0 auto 1rem;
-            width: 100px; /* Adjust logo size */
+            width: 100px;
+        }
+
+        .form-label {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <div class="register-container">
+    <div class="register-container" role="main" aria-label="Registration Form">
         <img src="static/logo.jpg" alt="Company Logo" class="logo">
-        <h2 class="text-center">Register</h2>
-        <form method="POST">
+        <h2 class="text-center" id="form-title">Register</h2>
+
+        <!-- Flash Messages with Toast -->
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body"></div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <script>
+                        var toast = new bootstrap.Toast(document.getElementById('liveToast'));
+                        document.querySelector('.toast-body').textContent = '{{ message|safe }}';
+                        document.getElementById('liveToast').classList.add('text-bg-' + '{{ category }}');
+                        toast.show();
+                    </script>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" id="registerForm" aria-labelledby="form-title">
+            {{ form.hidden_tag() }}
             <div class="mb-3">
                 <label for="name" class="form-label">Full Name</label>
-                <input type="text" class="form-control" name="name" required>
+                {{ form.name(class="form-control", id="name", required="true", aria_required="true") }}
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" name="email" required>
+                {{ form.email(class="form-control", id="email", required="true", aria_required="true") }}
+                <div class="invalid-feedback" id="emailFeedback"></div>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" required>
+                {{ form.password(class="form-control", id="password", required="true", aria_required="true") }}
+                <div class="invalid-feedback" id="passwordFeedback"></div>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Register</button>
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                {{ form.confirm_password(class="form-control", id="confirm_password", required="true", aria_required="true") }}
+                <div class="invalid-feedback" id="confirmFeedback"></div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" aria-label="Submit Registration">Register</button>
         </form>
-        <p class="mt-3 text-center">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+        <p class="mt-3 text-center"><a href="{{ url_for('login') }}" role="link" aria-label="Login if you already have an account">Already have an account? Login here</a></p>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            let isValid = true;
+
+            const email = document.getElementById('email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.value)) {
+                email.classList.add('is-invalid');
+                document.getElementById('emailFeedback').textContent = 'Please enter a valid email address.';
+                isValid = false;
+            } else {
+                email.classList.remove('is-invalid');
+                document.getElementById('emailFeedback').textContent = '';
+            }
+
+            const password = document.getElementById('password');
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password.value)) {
+                password.classList.add('is-invalid');
+                document.getElementById('passwordFeedback').textContent = 'Password must be at least 8 characters long and include uppercase, lowercase, and a number.';
+                isValid = false;
+            } else {
+                password.classList.remove('is-invalid');
+                document.getElementById('passwordFeedback').textContent = '';
+            }
+
+            const confirmPassword = document.getElementById('confirm_password');
+            if (confirmPassword.value !== password.value) {
+                confirmPassword.classList.add('is-invalid');
+                document.getElementById('confirmFeedback').textContent = 'Passwords do not match.';
+                isValid = false;
+            } else {
+                confirmPassword.classList.remove('is-invalid');
+                document.getElementById('confirmFeedback').textContent = '';
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>
