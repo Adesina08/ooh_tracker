@@ -7,5 +7,5 @@ Werkzeug
 whisper
 moviepy
 spacy
-en-core-web-sm
+en-core-web-sm==3.8.0
 python-dotenv
