@@ -4,7 +4,7 @@ Flask-WTF
 Flask-Login
 WTForms
 Werkzeug
-whisper
+git+https://github.com/openai/whisper.git
 moviepy==1.0.3
 spacy
 python-dotenv
