@@ -5,7 +5,7 @@ Flask-Login
 WTForms
 Werkzeug
 whisper
-moviepy
+moviepy==1.0.3
 spacy
 python-dotenv
 gunicorn
