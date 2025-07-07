@@ -1,11 +1,5 @@
-Flask
-Flask-MySQLdb
-Flask-WTF
-Flask-Login
-WTForms
-Werkzeug
-git+https://github.com/openai/whisper.git
-moviepy==1.0.3
-spacy
+flask
+flask-mysqldb
+werkzeug
 python-dotenv
 gunicorn

@@ -7,7 +7,6 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://cdn.tailwindcss.com/3.4.1" rel="stylesheet">
     <style>
         :root {
             --primary: #4e73df;
@@ -17,10 +16,9 @@
             --danger: #e74a3b;
         }
         body {
-            background: linear-gradient(to bottom, #f8f9fc, #e9ecef);
+            background-color: #f8f9fc;
             font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             overflow-x: hidden;
-            min-height: 100vh;
         }
         .navbar {
             background-color: #fff;
@@ -37,7 +35,7 @@
             padding: 3px;
         }
         .sidebar {
-            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
             color: white;
             position: fixed;
             top: 0;
@@ -52,7 +50,6 @@
             flex-direction: column;
             align-items: center;
             text-decoration: none;
-            margin-bottom: 1rem;
             padding: 1.5rem 1rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
@@ -100,7 +97,7 @@
             text-align: center;
         }
         .offcanvas {
-            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            background: linear-gradient(180deg, var(--primary) 0%, #224abe 100%);
             color: white;
         }
         .offcanvas .nav-link {
@@ -123,70 +120,127 @@
         .content {
             padding: 1.5rem;
         }
-        .capture-section {
+        .tracking-form {
             background: white;
             border-radius: 0.5rem;
             padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: opacity 0.3s ease-in-out;
-            opacity: 0;
-            display: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
         }
-        .capture-section.visible {
-            display: block;
-            opacity: 1;
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e3e6f0;
         }
-        .preview-image, .preview-video {
-            max-width: 100%;
-            max-height: 200px;
-            margin-top: 10px;
-            display: none;
-            border-radius: 0.25rem;
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
-        .checklist-item i.bi-check-circle-fill {
-            color: var(--success);
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
         }
-        .checklist-item i.bi-x-circle-fill {
-            color: var(--danger);
+        .section-title i {
+            margin-right: 10px;
         }
-        .capture-button {
-            font-size: 1.25rem;
-            font-weight: bold;
-            padding: 1rem 2rem;
+        .media-capture-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .capture-btn {
+            flex: 1;
+            min-width: 200px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ddd;
             border-radius: 0.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            /* Ensure no default button styles interfere */
-            background: none;
-            border: none;
-            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-        .capture-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        .capture-btn:hover {
+            border-color: var(--primary);
+            background-color: rgba(78, 115, 223, 0.05);
         }
-        .capture-button.active {
-            background: linear-gradient(90deg, #4e73df, #224abe) !important;
-            color: white !important;
-            /* Override any default styles */
-            border: none !important;
-            outline: none !important;
+        .capture-btn i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
         }
-        .capture-button.inactive {
-            background: white;
-            color: #4e73df;
-            border: 2px solid #4e73df;
-        }
-        #aiFormContainer.visible {
-            margin-top: 2rem; /* Lower the AI Capture section */
-        }
-        #aiReview {
+        .media-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
             margin-top: 1rem;
-            padding: 1rem;
-            border: 1px solid #e9ecef;
+        }
+        .media-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
             border-radius: 0.5rem;
-            background-color: #f8f9fa;
-            display: none;
+            overflow: hidden;
+        }
+        .media-item img, .media-item video, .media-item audio {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .remove-media {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .location-status {
+            padding: 0.75rem;
+            border-radius: 0.35rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .location-status i {
+            margin-right: 0.5rem;
+        }
+        .status-waiting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .checkbox-option {
+            flex: 1 0 45%;
+        }
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: -10px;
+            font-size: 0.85rem;
+            color: var(--secondary);
         }
         @media (min-width: 992px) {
             .navbar {
@@ -210,23 +264,40 @@
             body {
                 padding-top: 56px;
             }
-            .capture-section {
+            .capture-btn {
+                min-width: 150px;
+                height: 120px;
+            }
+            .capture-btn i {
+                font-size: 1.5rem;
+            }
+            .tracking-form {
                 padding: 1.5rem;
             }
         }
         @media (max-width: 576px) {
-            .capture-section {
+            .capture-btn {
+                min-width: 100%;
+                height: 100px;
+            }
+            .capture-btn i {
+                font-size: 1.25rem;
+            }
+            .tracking-form {
                 padding: 1rem;
             }
-            h1 {
-                font-size: 1.5rem;
+            .form-section {
+                padding-bottom: 1rem;
+                margin-bottom: 1rem;
             }
-            p {
+            .section-title {
+                font-size: 1.25rem;
+            }
+            .form-label {
                 font-size: 0.9rem;
             }
-            .capture-button {
-                width: 100%;
-                margin-bottom: 1rem;
+            .form-control, .form-select {
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -298,10 +369,10 @@
         <div class="offcanvas-body">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
+                    <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
+                    <a class="nav-link" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('instructions') }}"><i class="nav-icon bi bi-info-circle"></i>Instructions</a>
@@ -315,7 +386,7 @@
 
     <!-- Main Content -->
     <div class="content">
-        <div class="container-fluid max-w-4xl mx-auto">
+        <div class="container-fluid">
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -328,490 +399,489 @@
                 {% endif %}
             {% endwith %}
 
-            <h1 class="text-4xl font-bold mb-12 text-gray-800 text-center">Track Consumption</h1>
+            <div class="tracking-form">
+                <h2 class="mb-4">Track Your Consumption</h2>
+                <form method="POST" enctype="multipart/form-data" id="consumptionForm">
+                    <!-- Section 1: Media Capture -->
+               <!-- Section 1: Media Capture -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
+                    <p class="text-muted">Capture photos, videos, or audio of your consumption</p>
+                    <div class="media-capture-container">
+                        <div class="capture-btn" id="photoCaptureBtn">
+                            <i class="bi bi-camera-fill"></i>
+                            <span>Take Photo</span>
+                            <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
+                        </div>
+                        <div class="capture-btn" id="videoCaptureBtn">
+                            <i class="bi bi-camera-video-fill"></i>
+                            <span>Record Video</span>
+                            <input type="file" id="videoInput" name="video" accept="video/*" capture="environment" style="display: none;">
+                        </div>
+                        <div class="capture-btn" id="audioCaptureBtn">
+                            <i class="bi bi-mic-fill"></i>
+                            <span>Record Audio</span>
+                            <input type="file" id="audioInput" name="audio" accept="audio/*" capture="microphone" style="display: none;">
+                        </div>
+                    </div>
+                    <div class="media-preview" id="mediaPreview"></div>
+                    <div id="mediaError" class="text-danger" style="display: none;"></div>
+                    <!-- Video recording preview (hidden by default) -->
+                    <div id="videoPreviewContainer" style="display: none; margin-top: 1rem;">
+                        <video id="videoPreview" width="100%" height="auto" autoplay></video>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-primary" id="startVideoBtn" style="display: none;">Start Recording</button>
+                            <button class="btn btn-danger" id="stopVideoBtn" style="display: none;">Stop Recording</button>
+                        </div>
+                    </div>
+                    <!-- Audio recording controls (hidden by default) -->
+                    <div id="audioPreviewContainer" style="display: none; margin-top: 1rem;">
+                        <p id="audioStatus">Ready to record audio</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary" id="startAudioBtn" style="display: none;">Start Recording</button>
+                            <button class="btn btn-danger" id="stopAudioBtn" style="display: none;">Stop Recording</button>
+                        </div>
+                    </div>
+                </div>
+                    <!-- Section 2: Product Information -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Category</label>
+                                <select class="form-select" name="product_category" required>
+                                    <option value="" selected disabled>Select category</option>
+                                    <option value="snack">Snack</option>
+                                    <option value="meal">Meal</option>
+                                    <option value="beverage">Beverage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="brand" required>
+                                    <option value="" selected disabled>Select brand</option>
+                                    <option value="brand1">Brand 1</option>
+                                    <option value="brand2">Brand 2</option>
+                                    <option value="brand3">Brand 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">SKU</label>
+                                <select class="form-select" name="sku" required>
+                                    <option value="" selected disabled>Select SKU size</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount Paid (₦)</label>
+                                <input type="number" step="0.01" class="form-control" name="amount_paid" required>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Capture Selection Buttons -->
-            <div class="flex justify-center mb-12 space-x-6">
-                <button class="capture-button active" id="showManual" type="button" aria-label="Show Manual Capture Form">
-                    <i class="bi bi-pencil-fill mr-3"></i>Manual Capture
-                </button>
-                <button class="capture-button inactive" id="showAI" type="button" aria-label="Show AI Capture Form">
-                    <i class="bi bi-mic-fill mr-3"></i>AI Capture
-                </button>
-            </div>
+                    <!-- Section 3: Purchase and Consumption Context -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Purchase and Consumption Context</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Purchase</label>
+                                <select class="form-select" name="purchase_location" required>
+                                    <option value="" selected disabled>Select outlet type</option>
+                                    <option value="supermarket">Supermarket</option>
+                                    <option value="convenience_store">Convenience Store</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Consume</label>
+                                <select class="form-select" name="consume_location" required>
+                                    <option value="" selected disabled>Select location</option>
+                                    <option value="home">At Home</option>
+                                    <option value="work">At Work</option>
+                                    <option value="play">At Play</option>
+                                    <option value="school">At School</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">With Whom</label>
+                                <select class="form-select" name="with_whom" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="alone">Alone</option>
+                                    <option value="with_others">With Others</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">With What</label>
+                                <select class="form-select" name="with_what" required>
+                                    <option value="" selected disabled>Select option</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Manual Capture Section -->
-            <div id="manualFormContainer" class="capture-section">
-                <h3 class="text-2xl font-semibold mb-6 text-gray-700">Manual Capture</h3>
-                <form id="manualForm" enctype="multipart/form-data" class="space-y-6">
-                    <input type="hidden" name="capture_type" value="manual">
-                    <input type="hidden" id="latitude" name="latitude">
-                    <input type="hidden" id="longitude" name="longitude">
-                    <div>
-                        <label for="photo" class="block text-sm font-medium text-gray-700">Photo</label>
-                        <input type="file" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="photo" name="media" accept="image/*">
-                        <img id="photoPreview" class="preview-image mt-2" alt="Photo preview">
-                        <button type="button" class="btn btn-outline-danger btn-sm mt-2 d-none" id="removePhoto">Remove Photo</button>
-                    </div>
-                    <div>
-                        <label for="product_category" class="block text-sm font-medium text-gray-700">Product Category</label>
-                        <select class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="product_category" name="product_category" required>
-                            <option value="" disabled selected>Select a category</option>
-                        </select>
-                        <input type="text" class="form-control mt-2 d-none" id="other_category" name="other_category" placeholder="Enter custom category">
-                    </div>
-                    <div>
-                        <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
-                        <select class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="brand" name="brand" required>
-                            <option value="" disabled selected>Select a brand</option>
-                        </select>
-                        <input type="text" class="form-control mt-2 d-none" id="other_brand" name="other_brand" placeholder="Enter custom brand">
-                    </div>
-                    <div>
-                        <label for="sku" class="block text-sm font-medium text-gray-700">SKU/Product ID</label>
-                        <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="sku" name="sku">
-                    </div>
-                    <div>
-                        <label for="amount_paid" class="block text-sm font-medium text-gray-700">Amount Paid (₦)</label>
-                        <input type="number" step="0.01" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="amount_paid" name="amount_paid" required>
-                    </div>
-                    <div>
-                        <label for="purchase_location" class="block text-sm font-medium text-gray-700">Purchase Location</label>
-                        <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="purchase_location" name="purchase_location" required>
-                    </div>
-                    <div>
-                        <label for="consume_location" class="block text-sm font-medium text-gray-700">Consumption Location</label>
-                        <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="consume_location" name="consume_location" required>
-                    </div>
-                    <div>
-                        <label for="with_whom" class="block text-sm font-medium text-gray-700">With Whom</label>
-                        <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="with_whom" name="with_whom">
-                    </div>
-                    <div>
-                        <label for="with_what" class="block text-sm font-medium text-gray-700">With What</label>
-                        <select class="form-select mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="with_what" name="with_what">
-                            <option value="">None</option>
-                            <option value="food">Food</option>
-                            <option value="drink">Drink</option>
-                            <option value="snack">Snack</option>
-                        </select>
-                    </div>
-                    <div id="additional_product_info" class="d-none space-y-4">
-                        <div>
-                            <label for="additional_product_category" class="block text-sm font-medium text-gray-700">Additional Product Category</label>
-                            <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="additional_product_category" name="additional_product_category">
+                    <!-- Section 4: Additional Product Information -->
+                    <div class="form-section" id="additionalProductInfo" style="display: none;">
+                        <h3 class="section-title"><i class="bi bi-tag"></i> Additional Product Information</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Product Category</label>
+                                <select class="form-select" name="additional_product_category">
+                                    <option value="" selected disabled>Select category</option>
+                                    <option value="snack">Snack</option>
+                                    <option value="meal">Meal</option>
+                                    <option value="beverage">Beverage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" name="additional_brand">
+                                    <option value="" selected disabled>Select brand</option>
+                                    <option value="brand1">Brand 1</option>
+                                    <option value="brand2">Brand 2</option>
+                                    <option value="brand3">Brand 3</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label for="additional_brand" class="block text-sm font-medium text-gray-700">Additional Brand</label>
-                            <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="additional_brand" name="additional_brand">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">SKU</label>
+                                <select class="form-select" name="additional_sku">
+                                    <option value="" selected disabled>Select SKU size</option>
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Amount Paid (₦)</label>
+                                <input type="number" step="0.01" class="form-control" name="additional_amount_paid">
+                            </div>
                         </div>
-                        <div>
-                            <label for="additional_sku" class="block text-sm font-medium text-gray-700">Additional SKU/Product ID</label>
-                            <input type="text" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="additional_sku" name="additional_sku">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Where Purchase</label>
+                                <select class="form-select" name="additional_purchase_location">
+                                    <option value="" selected disabled>Select outlet type</option>
+                                    <option value="supermarket">Supermarket</option>
+                                    <option value="convenience_store">Convenience Store</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Location Coordinates</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="location_coords" readonly>
-                            <button type="button" class="btn btn-outline-primary ml-2" id="getLocation">Get Location</button>
+
+                    <!-- Section 5: Geolocation Capture -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
+                        <button type="button" class="btn btn-primary" id="getLocationBtn">
+                            <i class="bi bi-geo-alt-fill"></i> Capture Current Location
+                        </button>
+                        <div id="locationStatus" class="location-status status-waiting">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>Location not captured yet</span>
                         </div>
-                        <div id="locationError" class="text-danger d-none mt-2"></div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <input type="hidden" id="accuracy" name="accuracy">
                     </div>
-                    <button type="submit" class="btn btn-primary w-full py-2" id="manualSubmit">
-                        <span class="spinner-border spinner-border-sm d-none" id="manualSpinner" role="status" aria-hidden="true"></span>
-                        Submit
-                    </button>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Submit Consumption</button>
+                    </div>
                 </form>
-            </div>
-
-            <!-- AI Capture Section -->
-            <div id="aiFormContainer" class="capture-section">
-                <h3 class="text-2xl font-semibold mb-6 text-gray-700">AI Capture</h3>
-                <p class="text-gray-600 mb-4">Please record a video and mention the following details:</p>
-                <ul class="list-disc pl-5 text-gray-600 mb-4">
-                    <li>Product Category (e.g., Beverages, Snacks, Fast Food)</li>
-                    <li>Brand (e.g., Coca-Cola, Lay's, McDonald's)</li>
-                    <li>SKU/Product ID (if applicable)</li>
-                    <li>Amount Paid (e.g., 500 Naira)</li>
-                    <li>Purchase Location (e.g., Shoprite Lagos)</li>
-                    <li>Consumption Location (e.g., Home, Office)</li>
-                    <li>With Whom (e.g., Friends, Family, Alone)</li>
-                    <li>With What (e.g., Food, Drink, Snack, or None)</li>
-                    <li>If "With What" is not None, mention additional product details (category, brand, SKU)</li>
-                </ul>
-                <div>
-                    <label for="video" class="block text-sm font-medium text-gray-700">Record Video</label>
-                    <input type="file" class="form-control mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" id="video" name="media" accept="video/*" required>
-                    <video id="videoPreview" class="preview-video mt-2" controls></video>
-                    <button type="button" class="btn btn-outline-danger btn-sm mt-2 d-none" id="removeVideo">Remove Video</button>
-                </div>
-                <div id="aiChecklist" class="mb-4 d-none">
-                    <h5 class="text-lg font-medium text-gray-700">AI Analysis Checklist</h5>
-                    <ul class="list-unstyled space-y-2">
-                        <li class="checklist-item">Product Category: <i class="bi bi-x-circle-fill" id="check_category"></i></li>
-                        <li class="checklist-item">Brand: <i class="bi bi-x-circle-fill" id="check_brand"></i></li>
-                        <li class="checklist-item">SKU/Product ID: <i class="bi bi-x-circle-fill" id="check_sku"></i></li>
-                        <li class="checklist-item">Amount Paid: <i class="bi bi-x-circle-fill" id="check_amount"></i></li>
-                        <li class="checklist-item">Purchase Location: <i class="bi bi-x-circle-fill" id="check_purchase"></i></li>
-                        <li class="checklist-item">Consumption Location: <i class="bi bi-x-circle-fill" id="check_consume"></i></li>
-                        <li class="checklist-item">With Whom: <i class="bi bi-x-circle-fill" id="check_whom"></i></li>
-                        <li class="checklist-item">With What: <i class="bi bi-x-circle-fill" id="check_what"></i></li>
-                    </ul>
-                    <p id="aiError" class="text-danger d-none">Please re-record the video and mention all required details.</p>
-                </div>
-                <form id="aiForm" enctype="multipart/form-data" class="space-y-6">
-                    <input type="hidden" name="capture_type" value="ai">
-                    <input type="hidden" id="ai_latitude" name="latitude">
-                    <input type="hidden" id="ai_longitude" name="longitude">
-                </form>
-                <div id="aiReview" class="mb-4">
-                    <h5 class="text-lg font-medium text-gray-700">Review Extracted Data</h5>
-                    <ul class="list-unstyled space-y-2">
-                        <li>Product Category: <span id="review_category"></span></li>
-                        <li>Brand: <span id="review_brand"></span></li>
-                        <li>SKU/Product ID: <span id="review_sku"></span></li>
-                        <li>Amount Paid: <span id="review_amount"></span></li>
-                        <li>Purchase Location: <span id="review_purchase"></span></li>
-                        <li>Consumption Location: <span id="review_consume"></span></li>
-                        <li>With Whom: <span id="review_with_whom"></span></li>
-                        <li>With What: <span id="review_with_what"></span></li>
-                    </ul>
-                    <button type="submit" class="btn btn-primary w-full py-2 mt-2" id="confirmSubmit">
-                        <span class="spinner-border spinner-border-sm d-none" id="confirmSpinner" role="status" aria-hidden="true"></span>
-                        Confirm and Submit
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Toggle between Manual and AI Capture
-        const manualButton = document.getElementById('showManual');
-        const aiButton = document.getElementById('showAI');
-        const manualFormContainer = document.getElementById('manualFormContainer');
-        const aiFormContainer = document.getElementById('aiFormContainer');
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js">
+    // Adjust content margin on resize
+window.addEventListener('resize', () => {
+    const content = document.querySelector('.content');
+    if (window.innerWidth >= 992) {
+        content.style.marginLeft = '220px';
+    } else {
+        content.style.marginLeft = '0';
+    }
+});
+if (window.innerWidth >= 992) {
+    document.querySelector('.content').style.marginLeft = '220px';
+}
 
-        function showManualForm() {
-            manualFormContainer.classList.add('visible');
-            aiFormContainer.classList.remove('visible');
-            manualButton.classList.remove('inactive');
-            manualButton.classList.add('active');
-            aiButton.classList.remove('active');
-            aiButton.classList.add('inactive');
+// Show/hide additional product info
+document.querySelector('select[name="with_what"]').addEventListener('change', function() {
+    const additionalSection = document.getElementById('additionalProductInfo');
+    additionalSection.style.display = this.value === 'yes' ? 'block' : 'none';
+});
+
+// Media capture functionality
+const photoInput = document.getElementById('photoInput');
+const videoInput = document.getElementById('videoInput');
+const audioInput = document.getElementById('audioInput');
+const mediaPreview = document.getElementById('mediaPreview');
+const mediaError = document.getElementById('mediaError');
+const videoPreview = document.getElementById('videoPreview');
+const videoPreviewContainer = document.getElementById('videoPreviewContainer');
+const startVideoBtn = document.getElementById('startVideoBtn');
+const stopVideoBtn = document.getElementById('stopVideoBtn');
+const audioPreviewContainer = document.getElementById('audioPreviewContainer');
+const startAudioBtn = document.getElementById('startAudioBtn');
+const stopAudioBtn = document.getElementById('stopAudioBtn');
+const audioStatus = document.getElementById('audioStatus');
+
+let mediaRecorder;
+let recordedChunks = [];
+let stream;
+
+// Helper function to display errors
+function showError(message) {
+    mediaError.textContent = message;
+    mediaError.style.display = 'block';
+}
+
+// Helper function to clear errors
+function clearError() {
+    mediaError.textContent = '';
+    mediaError.style.display = 'none';
+}
+
+// Photo capture
+document.getElementById('photoCaptureBtn').addEventListener('click', function() {
+    clearError();
+    photoInput.click();
+});
+
+photoInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const mediaItem = document.createElement('div');
+            mediaItem.classList.add('media-item');
+            mediaItem.innerHTML = `<img src="${e.target.result}" alt="Photo Preview">
+                                 <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+            mediaPreview.appendChild(mediaItem);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Video capture with WebRTC fallback
+document.getElementById('videoCaptureBtn').addEventListener('click', async function() {
+    clearError();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            videoPreview.srcObject = stream;
+            videoPreviewContainer.style.display = 'block';
+            startVideoBtn.style.display = 'inline-block';
+            stopVideoBtn.style.display = 'none';
+        } catch (err) {
+            showError('Failed to access camera. Please ensure permissions are granted or use file upload.');
+            videoInput.click();
         }
+    } else {
+        showError('Camera not supported. Please use file upload.');
+        videoInput.click();
+    }
+});
 
-        function showAIForm() {
-            aiFormContainer.classList.add('visible');
-            manualFormContainer.classList.remove('visible');
-            aiButton.classList.remove('inactive');
-            aiButton.classList.add('active');
-            manualButton.classList.remove('active');
-            manualButton.classList.add('inactive');
+startVideoBtn.addEventListener('click', function() {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) {
+            recordedChunks.push(e.data);
         }
+    };
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoURL = URL.createObjectURL(blob);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="video/webm"></video>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
 
-        manualButton.addEventListener('click', showManualForm);
-        aiButton.addEventListener('click', showAIForm);
+        // Add to form data
+        const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        videoInput.files = dataTransfer.files;
 
-        // No form visible initially
-        manualFormContainer.classList.remove('visible');
-        aiFormContainer.classList.remove('visible');
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        videoPreview.srcObject = null;
+        videoPreviewContainer.style.display = 'none';
+        startVideoBtn.style.display = 'none';
+        stopVideoBtn.style.display = 'none';
+    };
+    mediaRecorder.start();
+    startVideoBtn.style.display = 'none';
+    stopVideoBtn.style.display = 'inline-block';
+});
 
-        // Adjust content margin on resize
-        window.addEventListener('resize', () => {
-            const content = document.querySelector('.content');
-            if (window.innerWidth >= 992) {
-                content.style.marginLeft = '220px';
-            } else {
-                content.style.marginLeft = '0';
-            }
-        });
-        if (window.innerWidth >= 992) {
-            document.querySelector('.content').style.marginLeft = '220px';
+stopVideoBtn.addEventListener('click', function() {
+    mediaRecorder.stop();
+});
+
+// Audio capture with WebRTC fallback
+document.getElementById('audioCaptureBtn').addEventListener('click', async function() {
+    clearError();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioPreviewContainer.style.display = 'block';
+            audioStatus.textContent = 'Ready to record audio';
+            startAudioBtn.style.display = 'inline-block';
+            stopAudioBtn.style.display = 'none';
+        } catch (err) {
+            showError('Failed to access microphone. Please ensure permissions are granted or use file upload.');
+            audioInput.click();
         }
+    } else {
+        showError('Microphone not supported. Please use file upload.');
+        audioInput.click();
+    }
+});
 
-        // Geolocation for both sections
-        function getLocation(formType) {
-            const latitudeInput = document.getElementById(formType === 'manual' ? 'latitude' : 'ai_latitude');
-            const longitudeInput = document.getElementById(formType === 'manual' ? 'longitude' : 'ai_longitude');
-            const coordsDisplay = formType === 'manual' ? document.getElementById('location_coords') : null;
-            const errorDisplay = formType === 'manual' ? document.getElementById('locationError') : null;
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        latitudeInput.value = position.coords.latitude;
-                        longitudeInput.value = position.coords.longitude;
-                        if (coordsDisplay) {
-                            coordsDisplay.value = `${position.coords.latitude}, ${position.coords.longitude}`;
-                            errorDisplay.classList.add('d-none');
-                        }
-                    },
-                    (error) => {
-                        if (errorDisplay) {
-                            errorDisplay.textContent = 'Unable to retrieve location. Please try again.';
-                            errorDisplay.classList.remove('d-none');
-                        }
-                        console.error('Geolocation error:', error);
-                    }
-                );
-            } else {
-                if (errorDisplay) {
-                    errorDisplay.textContent = 'Geolocation is not supported by your browser.';
-                    errorDisplay.classList.remove('d-none');
-                }
-            }
+startAudioBtn.addEventListener('click', function() {
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) {
+            recordedChunks.push(e.data);
         }
+    };
+    mediaRecorder.onstop = function() {
+        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const audioURL = URL.createObjectURL(blob);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="audio/webm"></audio>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
 
-        // Auto-capture geolocation on page load
-        getLocation('manual');
-        getLocation('ai');
+        // Add to form data
+        const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        audioInput.files = dataTransfer.files;
 
-        // Manual geolocation button
-        document.getElementById('getLocation')?.addEventListener('click', () => getLocation('manual'));
+        // Clean up
+        stream.getTracks().forEach(track => track.stop());
+        audioPreviewContainer.style.display = 'none';
+        startAudioBtn.style.display = 'none';
+        stopAudioBtn.style.display = 'none';
+        audioStatus.textContent = 'Ready to record audio';
+    };
+    mediaRecorder.start();
+    audioStatus.textContent = 'Recording audio...';
+    startAudioBtn.style.display = 'none';
+    stopAudioBtn.style.display = 'inline-block';
+});
 
-        // Photo preview and remove
-        const photoInput = document.getElementById('photo');
-        const photoPreview = document.getElementById('photoPreview');
-        const removePhoto = document.getElementById('removePhoto');
-        photoInput?.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file && file.type.startsWith('image/')) {
-                if (file.size > 16 * 1024 * 1024) {
-                    alert('Photo size exceeds 16MB limit.');
-                    this.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    photoPreview.src = e.target.result;
-                    photoPreview.style.display = 'block';
-                    removePhoto.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
+stopAudioBtn.addEventListener('click', function() {
+    mediaRecorder.stop();
+});
+
+// Handle file input changes (fallback for browsers not supporting WebRTC)
+videoInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const videoURL = URL.createObjectURL(file);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="${file.type}"></video>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+    }
+});
+
+audioInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const audioURL = URL.createObjectURL(file);
+        const mediaItem = document.createElement('div');
+        mediaItem.classList.add('media-item');
+        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="${file.type}"></audio>
+                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
+        mediaPreview.appendChild(mediaItem);
+    }
+});
+
+// Geolocation capture
+document.getElementById('getLocationBtn').addEventListener('click', function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                document.getElementById('accuracy').value = position.coords.accuracy;
+                const statusElement = document.getElementById('locationStatus');
+                statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location captured successfully!';
+                statusElement.classList.remove('status-waiting', 'status-error');
+                statusElement.classList.add('status-success');
+            },
+            function(error) {
+                const statusElement = document.getElementById('locationStatus');
+                statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Unable to retrieve location.';
+                statusElement.classList.remove('status-waiting', 'status-success');
+                statusElement.classList.add('status-error');
             }
-        });
-        removePhoto?.addEventListener('click', () => {
-            photoInput.value = '';
-            photoPreview.style.display = 'none';
-            removePhoto.classList.add('d-none');
-        });
+        );
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+});
 
-        // Video preview and remove
-        const videoInput = document.getElementById('video');
-        const videoPreview = document.getElementById('videoPreview');
-        const removeVideo = document.getElementById('removeVideo');
-        videoInput?.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file && file.type.startsWith('video/')) {
-                if (file.size > 16 * 1024 * 1024) {
-                    alert('Video size exceeds 16MB limit.');
-                    this.value = '';
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    videoPreview.src = e.target.result;
-                    videoPreview.style.display = 'block';
-                    removeVideo.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
-
-                // Initial AI analysis
-                const formData = new FormData(document.getElementById('aiForm'));
-                formData.append('media', this.files[0]);
-                fetch('/api/submit-consumption-mysql', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const checklist = document.getElementById('aiChecklist');
-                    const errorDisplay = document.getElementById('aiError');
-                    const reviewSection = document.getElementById('aiReview');
-                    checklist.classList.add('d-none');
-                    errorDisplay.classList.add('d-none');
-                    if (data.error && data.missing_fields) {
-                        checklist.classList.remove('d-none');
-                        errorDisplay.textContent = 'Please re-record the video and mention all required details: ' + data.missing_fields.join(', ');
-                        errorDisplay.classList.remove('d-none');
-                        ['category', 'brand', 'sku', 'amount', 'purchase', 'consume', 'whom', 'what'].forEach(field => {
-                            const check = document.getElementById(`check_${field}`);
-                            check.className = data.missing_fields.includes(`product_${field}`) || data.missing_fields.includes(field) ? 'bi bi-x-circle-fill' : 'bi bi-check-circle-fill';
-                        });
-                    } else if (data.message === 'Review extracted data') {
-                        reviewSection.style.display = 'block';
-                        document.getElementById('review_category').textContent = data.fields.product_category || 'Not detected';
-                        document.getElementById('review_brand').textContent = data.fields.brand || 'Not detected';
-                        document.getElementById('review_sku').textContent = data.fields.sku || 'Not detected';
-                        document.getElementById('review_amount').textContent = data.fields.amount_paid || 'Not detected';
-                        document.getElementById('review_purchase').textContent = data.fields.purchase_location || 'Not detected';
-                        document.getElementById('review_consume').textContent = data.fields.consume_location || 'Not detected';
-                        document.getElementById('review_with_whom').textContent = data.fields.with_whom || 'Not detected';
-                        document.getElementById('review_with_what').textContent = data.fields.with_what || 'Not detected';
-                    } else if (data.success) {
-                        const alert = document.createElement('div');
-                        alert.className = 'alert alert-success alert-dismissible fade show';
-                        alert.role = 'alert';
-                        alert.innerHTML = 'Consumption recorded successfully! <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        document.querySelector('.container-fluid').prepend(alert);
-                        setTimeout(() => window.location.href = data.redirect, 2000);
-                    } else {
-                        errorDisplay.textContent = data.error || 'An error occurred during AI analysis.';
-                        errorDisplay.classList.remove('d-none');
-                    }
-                })
-                .catch(error => {
-                    console.error('AI submission error:', error);
-                    document.getElementById('aiError').textContent = 'Error processing video: ' + error;
-                    document.getElementById('aiError').classList.remove('d-none');
-                });
-            }
-        });
-        removeVideo?.addEventListener('click', () => {
-            videoInput.value = '';
-            videoPreview.style.display = 'none';
-            removeVideo.classList.add('d-none');
-            document.getElementById('aiChecklist').classList.add('d-none');
-            document.getElementById('aiReview').style.display = 'none';
-            document.getElementById('aiError').classList.add('d-none');
-        });
-
-        // Dynamic category and brand dropdowns
-        const categorySelect = document.getElementById('product_category');
-        const brandSelect = document.getElementById('brand');
-        const otherCategoryInput = document.getElementById('other_category');
-        const otherBrandInput = document.getElementById('other_brand');
-
-        fetch('/api/categories')
-            .then(response => response.json())
-            .then(categories => {
-                if (categories.error) {
-                    console.error('Error fetching categories:', categories.error);
-                    return;
-                }
-                categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    categorySelect.appendChild(option);
-                });
-                const otherOption = document.createElement('option');
-                otherOption.value = 'Other';
-                otherOption.textContent = 'Other';
-                categorySelect.appendChild(otherOption);
-            })
-            .catch(error => console.error('Error fetching categories:', error));
-
-        categorySelect.addEventListener('change', function() {
-            const category = this.value;
-            otherCategoryInput.classList.toggle('d-none', category !== 'Other');
-            otherCategoryInput.required = category === 'Other';
-            brandSelect.innerHTML = '<option value="" disabled selected>Select a brand</option>';
-            if (category && category !== 'Other') {
-                fetch(`/api/brands/${encodeURIComponent(category)}`)
-                    .then(response => response.json())
-                    .then(brands => {
-                        if (brands.error) {
-                            console.error('Error fetching brands:', brands.error);
-                            return;
-                        }
-                        brands.forEach(brand => {
-                            const option = document.createElement('option');
-                            option.value = brand;
-                            option.textContent = brand;
-                            brandSelect.appendChild(option);
-                        });
-                        const otherOption = document.createElement('option');
-                        otherOption.value = 'Other';
-                        otherOption.textContent = 'Other';
-                        brandSelect.appendChild(otherOption);
-                    })
-                    .catch(error => console.error('Error fetching brands:', error));
-            }
-        });
-
-        brandSelect.addEventListener('change', function() {
-            otherBrandInput.classList.toggle('d-none', this.value !== 'Other');
-            otherBrandInput.required = this.value === 'Other';
-        });
-
-        // Toggle additional product info
-        document.getElementById('with_what').addEventListener('change', function() {
-            document.getElementById('additional_product_info').classList.toggle('d-none', !this.value);
-        });
-
-        // Manual form submission
-        document.getElementById('manualForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const submitButton = document.getElementById('manualSubmit');
-            const spinner = document.getElementById('manualSpinner');
-            submitButton.disabled = true;
-            spinner.classList.remove('d-none');
-
-            fetch('/api/submit-consumption-mysql', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                submitButton.disabled = false;
-                spinner.classList.add('d-none');
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show';
-                    alert.role = 'alert';
-                    alert.innerHTML = 'Consumption recorded successfully! <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                    document.querySelector('.container-fluid').prepend(alert);
-                    setTimeout(() => window.location.href = data.redirect, 2000);
-                }
-            })
-            .catch(error => {
-                submitButton.disabled = false;
-                spinner.classList.add('d-none');
-                alert('Error submitting form: ' + error);
-            });
-        });
-
-        // Confirm and submit reviewed AI data
-        document.getElementById('confirmSubmit')?.addEventListener('click', function(event) {
-            event.preventDefault();
-            const formData = new FormData(document.getElementById('aiForm'));
-            const submitButton = document.getElementById('confirmSubmit');
-            const spinner = document.getElementById('confirmSpinner');
-            submitButton.disabled = true;
-            spinner.classList.remove('d-none');
-
-            fetch('/api/submit-consumption-mysql', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                submitButton.disabled = false;
-                spinner.classList.add('d-none');
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show';
-                    alert.role = 'alert';
-                    alert.innerHTML = 'Consumption recorded successfully! <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                    document.querySelector('.container-fluid').prepend(alert);
-                    setTimeout(() => window.location.href = data.redirect, 2000);
-                }
-            })
-            .catch(error => {
-                submitButton.disabled = false;
-                spinner.classList.add('d-none');
-                alert('Error submitting form: ' + error);
-            });
-        });
-    </script>
+// Form submission handler
+document.getElementById('consumptionForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const requiredFields = this.querySelectorAll('[required]');
+    let isValid = true;
+    requiredFields.forEach(field => {
+        if (!field.value) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    if (!isValid) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    const formData = new FormData(this);
+    fetch('/api/submit-consumption-mysql', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Consumption recorded successfully!');
+            window.location.href = '/dashboard';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while submitting the form');
+    });
+});
+</script>
 </body>
 </html>
