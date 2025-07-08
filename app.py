@@ -11,6 +11,8 @@ import whisper
 import re
 import logging
 
+app = Flask(__name__)
+
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key')
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'mov'}
