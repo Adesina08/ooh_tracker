@@ -8,45 +8,51 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background-image: url('/static/background.jpg'); /* Update with your image path */
+            background-image: url('/static/background.jpg');
             background-size: cover;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333; /* Default text color */
+            color: #1a1a1a;
+            background-color: rgba(0, 0, 0, 0.1);
         }
         .hero-section {
-            /*background: rgba(78, 115, 223, 0.8); /* Semi-transparent background for readability */
-            color: #4e73df; /* Change text color to white for better contrast */
-            padding: 5rem 0;
-            border-radius: 0 0 20px 20px;
-            margin-bottom: 3rem;
+                    /*background: rgba(78, 115, 223, 0.8); /* Semi-transparent background for readability */
+                    color: #4e73df; /* Change text color to white for better contrast */
+                    padding: 5rem 0;
+                    border-radius: 0 0 20px 20px;
+                    margin-bottom: 3rem;
+        }
+        .hero-section h1 {
+            color: #1E90FF; /* Dodger Blue for heading */
         }
         .btn-custom {
-            background-color: #87CEEB; /* Light blue background color */
-            color: #4e73df; /* Blue text color */
-            border: none; /* Remove border */
+            background-color: #1E90FF; /* Dodger Blue */
+            color: #FFFFFF; /* White text */
+            border: none;
         }
         .btn-custom:hover {
-            background-color: white; /* Darker sky blue on hover */
-            color: #4e73df; /* Change text color to white on hover */
+            background-color: #104E8B; /* Dark Slate Blue on hover */
+            color: #FFFFFF; /* White text on hover */
         }
         .btn-outline-custom {
-            border: 2px solid #87CEEB; /* Light blue border color */
-            color: #4e73df; /* Blue text color */
-            background-color: transparent; /* Transparent background */
+            /* border: 2px solid #1E90FF; /* Light Sky Blue border */
+            color: #FFFFFF; /* Dark text */
+            background-color: #1E90FF;
         }
         .btn-outline-custom:hover {
-            background-color: white; /* Light background on hover */
-            color: #00BFFF; /* Change text color to darker sky blue on hover */
+            background-color: #104E8B; /* Light Sky Blue background on hover */
+            color: #FFFFFF; /* White text on hover */
+            border-color: #87CEFA;
         }
         .feature-icon {
             font-size: 2.5rem;
-            color: white;
+            color: #1E90FF; /* Dodger Blue for icons */
             margin-bottom: 1rem;
         }
         .card {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            background: #FFFFFF;
             transition: transform 0.3s;
         }
         .card:hover {
@@ -55,29 +61,33 @@
         .logo {
             display: block;
             margin: 0 auto 1rem;
-            width: 200px; /* Adjust logo size */
+            width: 200px;
+        }
+
+        /* Focus styles for accessibility */
+        *:focus {
+            outline: 2px solid #1E90FF; /* Blue focus outline */
+            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <div class="hero-section text-center">
+    <div class="hero-section text-center" role="banner" aria-label="OOH Consumption Tracker Welcome">
         <div class="container">
             <img src="static/logo.jpg" alt="Company Logo" class="logo">
-            <h1 class="display-4 fw-bold mb-4">OOH Consumption Tracker</h1>
-            <p class="lead mb-5">Track your out-of-home consumption patterns with ease</p>
+            <h1 class="display-4 fw-bold mb-4" id="hero-title">OOH Consumption Tracker</h1>
+            <p class="lead mb-5" aria-hidden="true">Track your out-of-home consumption patterns with ease</p>
             <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                <a href="{{ url_for('login') }}" class="btn btn-custom btn-lg px-4 gap-3">Login</a>
-                <a href="{{ url_for('register') }}" class="btn btn-outline-custom btn-lg px-4">Register</a>
+                <a href="{{ url_for('login') }}" class="btn btn-custom btn-lg px-4 gap-3" role="button" aria-label="Go to Login Page">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-outline-custom btn-lg px-4" role="button" aria-label="Go to Registration Page">Register</a>
             </div>
         </div>
     </div>
 
-    <!-- Features Section -->
-    <div class="container">
+    <div class="container" role="main" aria-label="Features Section">
         <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
             <div class="col d-flex align-items-start">
-                <div class="card p-4 h-100">
+                <div class="card p-4 h-100" role="region" aria-label="Capture Consumption Feature">
                     <div class="text-center">
                         <i class="bi bi-camera feature-icon"></i>
                     </div>
@@ -86,7 +96,7 @@
                 </div>
             </div>
             <div class="col d-flex align-items-start">
-                <div class="card p-4 h-100">
+                <div class="card p-4 h-100" role="region" aria-label="Track Locations Feature">
                     <div class="text-center">
                         <i class="bi bi-map feature-icon"></i>
                     </div>
@@ -95,7 +105,7 @@
                 </div>
             </div>
             <div class="col d-flex align-items-start">
-                <div class="card p-4 h-100">
+                <div class="card p-4 h-100" role="region" aria-label="View Insights Feature">
                     <div class="text-center">
                         <i class="bi bi-graph-up feature-icon"></i>
                     </div>
