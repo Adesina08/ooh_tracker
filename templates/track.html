@@ -186,7 +186,7 @@
             border-radius: 0.5rem;
             overflow: hidden;
         }
-        .media-item img, .media-item video, .media-item audio {
+        .media-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -403,46 +403,20 @@
                 <h2 class="mb-4">Track Your Consumption</h2>
                 <form method="POST" enctype="multipart/form-data" id="consumptionForm">
                     <!-- Section 1: Media Capture -->
-               <!-- Section 1: Media Capture -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
-                    <p class="text-muted">Capture photos, videos, or audio of your consumption</p>
-                    <div class="media-capture-container">
-                        <div class="capture-btn" id="photoCaptureBtn">
-                            <i class="bi bi-camera-fill"></i>
-                            <span>Take Photo</span>
-                            <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
+                        <p class="text-muted">Capture a photo of your consumption</p>
+                        <div class="media-capture-container">
+                            <div class="capture-btn" id="photoCaptureBtn">
+                                <i class="bi bi-camera-fill"></i>
+                                <span>Take Photo</span>
+                                <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
+                            </div>
                         </div>
-                        <div class="capture-btn" id="videoCaptureBtn">
-                            <i class="bi bi-camera-video-fill"></i>
-                            <span>Record Video</span>
-                            <input type="file" id="videoInput" name="video" accept="video/*" capture="environment" style="display: none;">
-                        </div>
-                        <div class="capture-btn" id="audioCaptureBtn">
-                            <i class="bi bi-mic-fill"></i>
-                            <span>Record Audio</span>
-                            <input type="file" id="audioInput" name="audio" accept="audio/*" capture="microphone" style="display: none;">
-                        </div>
+                        <div class="media-preview" id="mediaPreview"></div>
+                        <div id="mediaError" class="text-danger" style="display: none;"></div>
                     </div>
-                    <div class="media-preview" id="mediaPreview"></div>
-                    <div id="mediaError" class="text-danger" style="display: none;"></div>
-                    <!-- Video recording preview (hidden by default) -->
-                    <div id="videoPreviewContainer" style="display: none; margin-top: 1rem;">
-                        <video id="videoPreview" width="100%" height="auto" autoplay></video>
-                        <div class="d-flex gap-2 mt-2">
-                            <button class="btn btn-primary" id="startVideoBtn" style="display: none;">Start Recording</button>
-                            <button class="btn btn-danger" id="stopVideoBtn" style="display: none;">Stop Recording</button>
-                        </div>
-                    </div>
-                    <!-- Audio recording controls (hidden by default) -->
-                    <div id="audioPreviewContainer" style="display: none; margin-top: 1rem;">
-                        <p id="audioStatus">Ready to record audio</p>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary" id="startAudioBtn" style="display: none;">Start Recording</button>
-                            <button class="btn btn-danger" id="stopAudioBtn" style="display: none;">Stop Recording</button>
-                        </div>
-                    </div>
-                </div>
+
                     <!-- Section 2: Product Information -->
                     <div class="form-section">
                         <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
@@ -461,9 +435,7 @@
                                 <label class="form-label">Brand</label>
                                 <select class="form-select" name="brand" required>
                                     <option value="" selected disabled>Select brand</option>
-                                    <option value="brand1">Brand 1</option>
-                                    <option value="brand2">Brand 2</option>
-                                    <option value="brand3">Brand 3</option>
+                                    <!-- Populated dynamically -->
                                 </select>
                             </div>
                         </div>
@@ -472,9 +444,7 @@
                                 <label class="form-label">SKU</label>
                                 <select class="form-select" name="sku" required>
                                     <option value="" selected disabled>Select SKU size</option>
-                                    <option value="small">Small</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="large">Large</option>
+                                    <!-- Populated dynamically -->
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -527,62 +497,15 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Section 4: Additional Product Information -->
-                    <div class="form-section" id="additionalProductInfo" style="display: none;">
-                        <h3 class="section-title"><i class="bi bi-tag"></i> Additional Product Information</h3>
-                        <div class="row">
+                        <div class="row" id="additionalBrandContainer" style="display: none;">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Product Category</label>
-                                <select class="form-select" name="additional_product_category">
-                                    <option value="" selected disabled>Select category</option>
-                                    <option value="snack">Snack</option>
-                                    <option value="meal">Meal</option>
-                                    <option value="beverage">Beverage</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Brand</label>
-                                <select class="form-select" name="additional_brand">
-                                    <option value="" selected disabled>Select brand</option>
-                                    <option value="brand1">Brand 1</option>
-                                    <option value="brand2">Brand 2</option>
-                                    <option value="brand3">Brand 3</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">SKU</label>
-                                <select class="form-select" name="additional_sku">
-                                    <option value="" selected disabled>Select SKU size</option>
-                                    <option value="small">Small</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="large">Large</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Amount Paid (₦)</label>
-                                <input type="number" step="0.01" class="form-control" name="additional_amount_paid">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Where Purchase</label>
-                                <select class="form-select" name="additional_purchase_location">
-                                    <option value="" selected disabled>Select outlet type</option>
-                                    <option value="supermarket">Supermarket</option>
-                                    <option value="convenience_store">Convenience Store</option>
-                                    <option value="restaurant">Restaurant</option>
-                                    <option value="online">Online</option>
-                                </select>
+                                <label class="form-label">Additional Brand</label>
+                                <input type="text" class="form-control" name="additional_brand" placeholder="Enter additional brand">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 5: Geolocation Capture -->
+                    <!-- Section 4: Geolocation Capture -->
                     <div class="form-section">
                         <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
                         <button type="button" class="btn btn-primary" id="getLocationBtn">
@@ -590,7 +513,7 @@
                         </button>
                         <div id="locationStatus" class="location-status status-waiting">
                             <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Location not captured yet</span>
+                            <span>Attempting to capture location...</span>
                         </div>
                         <input type="hidden" id="latitude" name="latitude">
                         <input type="hidden" id="longitude" name="longitude">
@@ -605,283 +528,183 @@
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js">
-    // Adjust content margin on resize
-window.addEventListener('resize', () => {
-    const content = document.querySelector('.content');
-    if (window.innerWidth >= 992) {
-        content.style.marginLeft = '220px';
-    } else {
-        content.style.marginLeft = '0';
-    }
-});
-if (window.innerWidth >= 992) {
-    document.querySelector('.content').style.marginLeft = '220px';
-}
-
-// Show/hide additional product info
-document.querySelector('select[name="with_what"]').addEventListener('change', function() {
-    const additionalSection = document.getElementById('additionalProductInfo');
-    additionalSection.style.display = this.value === 'yes' ? 'block' : 'none';
-});
-
-// Media capture functionality
-const photoInput = document.getElementById('photoInput');
-const videoInput = document.getElementById('videoInput');
-const audioInput = document.getElementById('audioInput');
-const mediaPreview = document.getElementById('mediaPreview');
-const mediaError = document.getElementById('mediaError');
-const videoPreview = document.getElementById('videoPreview');
-const videoPreviewContainer = document.getElementById('videoPreviewContainer');
-const startVideoBtn = document.getElementById('startVideoBtn');
-const stopVideoBtn = document.getElementById('stopVideoBtn');
-const audioPreviewContainer = document.getElementById('audioPreviewContainer');
-const startAudioBtn = document.getElementById('startAudioBtn');
-const stopAudioBtn = document.getElementById('stopAudioBtn');
-const audioStatus = document.getElementById('audioStatus');
-
-let mediaRecorder;
-let recordedChunks = [];
-let stream;
-
-// Helper function to display errors
-function showError(message) {
-    mediaError.textContent = message;
-    mediaError.style.display = 'block';
-}
-
-// Helper function to clear errors
-function clearError() {
-    mediaError.textContent = '';
-    mediaError.style.display = 'none';
-}
-
-// Photo capture
-document.getElementById('photoCaptureBtn').addEventListener('click', function() {
-    clearError();
-    photoInput.click();
-});
-
-photoInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const mediaItem = document.createElement('div');
-            mediaItem.classList.add('media-item');
-            mediaItem.innerHTML = `<img src="${e.target.result}" alt="Photo Preview">
-                                 <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
-            mediaPreview.appendChild(mediaItem);
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Video capture with WebRTC fallback
-document.getElementById('videoCaptureBtn').addEventListener('click', async function() {
-    clearError();
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            videoPreview.srcObject = stream;
-            videoPreviewContainer.style.display = 'block';
-            startVideoBtn.style.display = 'inline-block';
-            stopVideoBtn.style.display = 'none';
-        } catch (err) {
-            showError('Failed to access camera. Please ensure permissions are granted or use file upload.');
-            videoInput.click();
-        }
-    } else {
-        showError('Camera not supported. Please use file upload.');
-        videoInput.click();
-    }
-});
-
-startVideoBtn.addEventListener('click', function() {
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = function(e) {
-        if (e.data.size > 0) {
-            recordedChunks.push(e.data);
-        }
-    };
-    mediaRecorder.onstop = function() {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const videoURL = URL.createObjectURL(blob);
-        const mediaItem = document.createElement('div');
-        mediaItem.classList.add('media-item');
-        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="video/webm"></video>
-                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
-        mediaPreview.appendChild(mediaItem);
-
-        // Add to form data
-        const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        videoInput.files = dataTransfer.files;
-
-        // Clean up
-        stream.getTracks().forEach(track => track.stop());
-        videoPreview.srcObject = null;
-        videoPreviewContainer.style.display = 'none';
-        startVideoBtn.style.display = 'none';
-        stopVideoBtn.style.display = 'none';
-    };
-    mediaRecorder.start();
-    startVideoBtn.style.display = 'none';
-    stopVideoBtn.style.display = 'inline-block';
-});
-
-stopVideoBtn.addEventListener('click', function() {
-    mediaRecorder.stop();
-});
-
-// Audio capture with WebRTC fallback
-document.getElementById('audioCaptureBtn').addEventListener('click', async function() {
-    clearError();
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioPreviewContainer.style.display = 'block';
-            audioStatus.textContent = 'Ready to record audio';
-            startAudioBtn.style.display = 'inline-block';
-            stopAudioBtn.style.display = 'none';
-        } catch (err) {
-            showError('Failed to access microphone. Please ensure permissions are granted or use file upload.');
-            audioInput.click();
-        }
-    } else {
-        showError('Microphone not supported. Please use file upload.');
-        audioInput.click();
-    }
-});
-
-startAudioBtn.addEventListener('click', function() {
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = function(e) {
-        if (e.data.size > 0) {
-            recordedChunks.push(e.data);
-        }
-    };
-    mediaRecorder.onstop = function() {
-        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-        const audioURL = URL.createObjectURL(blob);
-        const mediaItem = document.createElement('div');
-        mediaItem.classList.add('media-item');
-        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="audio/webm"></audio>
-                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
-        mediaPreview.appendChild(mediaItem);
-
-        // Add to form data
-        const file = new File([blob], `audio_${Date.now()}.webm`, { type: 'audio/webm' });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        audioInput.files = dataTransfer.files;
-
-        // Clean up
-        stream.getTracks().forEach(track => track.stop());
-        audioPreviewContainer.style.display = 'none';
-        startAudioBtn.style.display = 'none';
-        stopAudioBtn.style.display = 'none';
-        audioStatus.textContent = 'Ready to record audio';
-    };
-    mediaRecorder.start();
-    audioStatus.textContent = 'Recording audio...';
-    startAudioBtn.style.display = 'none';
-    stopAudioBtn.style.display = 'inline-block';
-});
-
-stopAudioBtn.addEventListener('click', function() {
-    mediaRecorder.stop();
-});
-
-// Handle file input changes (fallback for browsers not supporting WebRTC)
-videoInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const videoURL = URL.createObjectURL(file);
-        const mediaItem = document.createElement('div');
-        mediaItem.classList.add('media-item');
-        mediaItem.innerHTML = `<video controls><source src="${videoURL}" type="${file.type}"></video>
-                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
-        mediaPreview.appendChild(mediaItem);
-    }
-});
-
-audioInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const audioURL = URL.createObjectURL(file);
-        const mediaItem = document.createElement('div');
-        mediaItem.classList.add('media-item');
-        mediaItem.innerHTML = `<audio controls><source src="${audioURL}" type="${file.type}"></audio>
-                             <div class="remove-media" onclick="this.parentElement.remove()">×</div>`;
-        mediaPreview.appendChild(mediaItem);
-    }
-});
-
-// Geolocation capture
-document.getElementById('getLocationBtn').addEventListener('click', function() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                document.getElementById('latitude').value = position.coords.latitude;
-                document.getElementById('longitude').value = position.coords.longitude;
-                document.getElementById('accuracy').value = position.coords.accuracy;
-                const statusElement = document.getElementById('locationStatus');
-                statusElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> Location captured successfully!';
-                statusElement.classList.remove('status-waiting', 'status-error');
-                statusElement.classList.add('status-success');
-            },
-            function(error) {
-                const statusElement = document.getElementById('locationStatus');
-                statusElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Unable to retrieve location.';
-                statusElement.classList.remove('status-waiting', 'status-success');
-                statusElement.classList.add('status-error');
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Adjust content margin on resize
+        window.addEventListener('resize', () => {
+            const content = document.querySelector('.content');
+            if (window.innerWidth >= 992) {
+                content.style.marginLeft = '220px';
+            } else {
+                content.style.marginLeft = '0';
             }
-        );
-    } else {
-        alert("Geolocation is not supported by this browser.");
-    }
-});
+        });
+        if (window.innerWidth >= 992) {
+            document.querySelector('.content').style.marginLeft = '220px';
+        }
 
-// Form submission handler
-document.getElementById('consumptionForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const requiredFields = this.querySelectorAll('[required]');
-    let isValid = true;
-    requiredFields.forEach(field => {
-        if (!field.value) {
-            field.classList.add('is-invalid');
-            isValid = false;
-        } else {
-            field.classList.remove('is-invalid');
+        // Show/hide additional brand field
+        document.querySelector('select[name="with_what"]').addEventListener('change', function() {
+            const additionalBrandContainer = document.getElementById('additionalBrandContainer');
+            additionalBrandContainer.style.display = this.value === 'yes' ? 'block' : 'none';
+        });
+
+        // Helper function to update geolocation status
+        function updateLocationStatus(message, statusClass) {
+            const statusElement = document.getElementById('locationStatus');
+            statusElement.innerHTML = `<i class="bi bi-${statusClass === 'status-success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i> ${message}`;
+            statusElement.classList.remove('status-waiting', 'status-error', 'status-success');
+            statusElement.classList.add(statusClass);
         }
-    });
-    if (!isValid) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    const formData = new FormData(this);
-    fetch('/api/submit-consumption-mysql', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Consumption recorded successfully!');
-            window.location.href = '/dashboard';
-        } else {
-            alert('Error: ' + data.message);
+
+        // Geolocation capture function
+        function captureGeolocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        document.getElementById('accuracy').value = position.coords.accuracy;
+                        updateLocationStatus('Location captured successfully!', 'status-success');
+                    },
+                    function(error) {
+                        updateLocationStatus('Unable to retrieve location. Try manual capture.', 'status-error');
+                    }
+                );
+            } else {
+                updateLocationStatus('Geolocation is not supported by this browser.', 'status-error');
+            }
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while submitting the form');
-    });
-});
-</script>
+
+        // Auto-capture geolocation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            captureGeolocation();
+        });
+
+        // Manual geolocation capture
+        document.getElementById('getLocationBtn').addEventListener('click', function() {
+            updateLocationStatus('Attempting to capture location...', 'status-waiting');
+            captureGeolocation();
+        });
+
+        // Photo capture
+        const photoInput = document.getElementById('photoInput');
+        const mediaPreview = document.getElementById('mediaPreview');
+        const mediaError = document.getElementById('mediaError');
+
+        // Helper function to display errors
+        function showError(message) {
+            mediaError.textContent = message;
+            mediaError.style.display = 'block';
+        }
+
+        // Helper function to clear errors
+        function clearError() {
+            mediaError.textContent = '';
+            mediaError.style.display = 'none';
+        }
+
+        document.getElementById('photoCaptureBtn').addEventListener('click', function() {
+            clearError();
+            photoInput.click();
+        });
+
+        photoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+                    showError('Please upload a valid image (PNG, JPG, JPEG).');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const mediaItem = document.createElement('div');
+                    mediaItem.classList.add('media-item');
+                    mediaItem.innerHTML = `<img src="${e.target.result}" alt="Photo Preview">
+                                         <div class="remove-media" onclick="this.parentElement.remove(); photoInput.value=''">×</div>`;
+                    mediaPreview.appendChild(mediaItem);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showError('No file selected.');
+            }
+        });
+
+        // Dynamic brand and SKU dropdowns for main product
+        function updateMainDropdowns(category, brandSelect, skuSelect) {
+            if (category) {
+                fetch(`/api/get-brands-and-skus?product_category=${category}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        brandSelect.innerHTML = '<option value="" selected disabled>Select brand</option>';
+                        skuSelect.innerHTML = '<option value="" selected disabled>Select SKU size</option>';
+                        data.brands.forEach(brand => {
+                            const option = document.createElement('option');
+                            option.value = brand;
+                            option.textContent = brand;
+                            brandSelect.appendChild(option);
+                        });
+                        data.skus.forEach(sku => {
+                            const option = document.createElement('option');
+                            option.value = sku;
+                            option.textContent = sku;
+                            skuSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching brands and SKUs:', error);
+                        brandSelect.innerHTML = '<option value="" selected disabled>Error loading brands</option>';
+                        skuSelect.innerHTML = '<option value="" selected disabled>Error loading SKUs</option>';
+                    });
+            } else {
+                brandSelect.innerHTML = '<option value="" selected disabled>Select brand</option>';
+                skuSelect.innerHTML = '<option value="" selected disabled>Select SKU size</option>';
+            }
+        }
+
+        // Update main product dropdowns when product category changes
+        document.querySelector('select[name="product_category"]').addEventListener('change', function() {
+            const brandSelect = document.querySelector('select[name="brand"]');
+            const skuSelect = document.querySelector('select[name="sku"]');
+            updateMainDropdowns(this.value, brandSelect, skuSelect);
+        });
+
+        // Form submission handler
+        document.getElementById('consumptionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            if (!isValid) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            const formData = new FormData(this);
+            fetch('/api/submit-consumption', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Consumption recorded successfully!');
+                    window.location.href = '/dashboard';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form');
+            });
+        });
+    </script>
 </body>
 </html>
