@@ -11,7 +11,6 @@ import whisper
 import re
 import logging
 
-app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key')
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'mov'}
@@ -20,12 +19,13 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
 # Database configuration
 db_params = {
-    'dbname': os.environ.get('DB_NAME', 'ooh_tracker'),
-    'user': os.environ.get('DB_USER', 'postgres'),
-    'password': os.environ.get('DB_PASSWORD', 'password'),
-    'host': os.environ.get('DB_HOST', 'localhost'),
+    'dbname': os.environ.get('DB_NAME', 'ooh_tracker_db'),
+    'user': os.environ.get('DB_USER', 'ooh_tracker_db_user'),
+    'password': os.environ.get('DB_PASSWORD', 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'),
+    'host': os.environ.get('DB_HOST', 'dpg-d1m16indiees7389jq50-a.oregon-postgres.render.com'),
     'port': os.environ.get('DB_PORT', '5432')
 }
+
 
 # Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
