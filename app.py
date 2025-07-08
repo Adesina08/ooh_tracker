@@ -224,36 +224,36 @@ def track():
 def instructions():
     return render_template('instructions.html')
 
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        email = request.form['email']
+# @app.route('/forgot-password', methods=['GET', 'POST'])
+# def forgot_password():
+#     if request.method == 'POST':
+#         email = request.form['email']
         
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-        user = cur.fetchone()
+#         conn = get_db_connection()
+#         cur = conn.cursor()
+#         cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+#         user = cur.fetchone()
         
-        if user:
-            token = secrets.token_urlsafe(32)
-            expires = datetime.now() + timedelta(hours=1)
+#         if user:
+#             token = secrets.token_urlsafe(32)
+#             expires = datetime.now() + timedelta(hours=1)
             
-            cur.execute("""
-                UPDATE users 
-                SET reset_token = %s, reset_token_expires = %s 
-                WHERE email = %s
-            """, (token, expires, email))
-            conn.commit()
+#             cur.execute("""
+#                 UPDATE users 
+#                 SET reset_token = %s, reset_token_expires = %s 
+#                 WHERE email = %s
+#             """, (token, expires, email))
+#             conn.commit()
             
-            reset_link = url_for('reset_password', token=token, _external=True)
-            send_password_reset_email(email, reset_link)
+#             reset_link = url_for('reset_password', token=token, _external=True)
+#             send_password_reset_email(email, reset_link)
             
-        flash('If an account exists with this email, you will receive a password reset link', 'info')
-        cur.close()
-        conn.close()
-        return redirect(url_for('login'))
+#         flash('If an account exists with this email, you will receive a password reset link', 'info')
+#         cur.close()
+#         conn.close()
+#         return redirect(url_for('login'))
     
-    return render_template('forgot_password.html')
+#     return render_template('forgot_password.html')
 
 def send_password_reset_email(email, reset_link):
     msg = MIMEText(f"""
