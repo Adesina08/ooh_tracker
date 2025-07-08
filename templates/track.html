@@ -145,6 +145,31 @@
         .section-title i {
             margin-right: 10px;
         }
+        .capture-mode-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .capture-mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.35rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+        }
+        .capture-mode-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        .capture-mode-btn.inactive {
+            background-color: var(--secondary);
+            color: white;
+            opacity: 0.7;
+        }
+        .capture-mode-btn:hover {
+            opacity: 0.9;
+        }
         .media-capture-container {
             display: flex;
             flex-wrap: wrap;
@@ -242,6 +267,12 @@
             font-size: 0.85rem;
             color: var(--secondary);
         }
+        #aiCaptureContent {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
         @media (min-width: 992px) {
             .navbar {
                 display: none;
@@ -298,6 +329,9 @@
             }
             .form-control, .form-select {
                 font-size: 0.85rem;
+            }
+            .capture-mode-buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -401,129 +435,143 @@
 
             <div class="tracking-form">
                 <h2 class="mb-4">Track Your Consumption</h2>
-                <form method="POST" enctype="multipart/form-data" id="consumptionForm">
-                    <!-- Section 1: Media Capture -->
-                    <div class="form-section">
-                        <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
-                        <p class="text-muted">Capture a photo of your consumption</p>
-                        <div class="media-capture-container">
-                            <div class="capture-btn" id="photoCaptureBtn">
-                                <i class="bi bi-camera-fill"></i>
-                                <span>Take Photo</span>
-                                <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
-                            </div>
-                        </div>
-                        <div class="media-preview" id="mediaPreview"></div>
-                        <div id="mediaError" class="text-danger" style="display: none;"></div>
-                    </div>
+                <!-- Capture Mode Buttons -->
+                <div class="capture-mode-buttons">
+                    <button type="button" class="capture-mode-btn active" id="manualCaptureBtn">Manual Capture</button>
+                    <button type="button" class="capture-mode-btn inactive" id="aiCaptureBtn">AI Capture</button>
+                </div>
 
-                    <!-- Section 2: Product Information -->
-                    <div class="form-section">
-                        <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Product Category</label>
-                                <select class="form-select" name="product_category" required>
-                                    <option value="" selected disabled>Select category</option>
-                                    <option value="snack">Snack</option>
-                                    <option value="meal">Meal</option>
-                                    <option value="beverage">Beverage</option>
-                                    <option value="other">Other</option>
-                                </select>
+                <!-- Manual Capture Content -->
+                <div id="manualCaptureContent">
+                    <form method="POST" enctype="multipart/form-data" id="consumptionForm">
+                        <!-- Section 1: Media Capture -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-camera"></i> Media Capture</h3>
+                            <p class="text-muted">Capture a photo of your consumption</p>
+                            <div class="media-capture-container">
+                                <div class="capture-btn" id="photoCaptureBtn">
+                                    <i class="bi bi-camera-fill"></i>
+                                    <span>Take Photo</span>
+                                    <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment" style="display: none;">
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Brand</label>
-                                <select class="form-select" name="brand" required>
-                                    <option value="" selected disabled>Select brand</option>
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
+                            <div class="media-preview" id="mediaPreview"></div>
+                            <div id="mediaError" class="text-danger" style="display: none;"></div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">SKU</label>
-                                <select class="form-select" name="sku" required>
-                                    <option value="" selected disabled>Select SKU size</option>
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Amount Paid (₦)</label>
-                                <input type="number" step="0.01" class="form-control" name="amount_paid" required>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Section 3: Purchase and Consumption Context -->
-                    <div class="form-section">
-                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Purchase and Consumption Context</h3>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Where Purchase</label>
-                                <select class="form-select" name="purchase_location" required>
-                                    <option value="" selected disabled>Select outlet type</option>
-                                    <option value="supermarket">Supermarket</option>
-                                    <option value="convenience_store">Convenience Store</option>
-                                    <option value="restaurant">Restaurant</option>
-                                    <option value="online">Online</option>
-                                </select>
+                        <!-- Section 2: Product Information -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Product Category</label>
+                                    <select class="form-select" name="product_category" required>
+                                        <option value="" selected disabled>Select category</option>
+                                        <option value="snack">Snack</option>
+                                        <option value="meal">Meal</option>
+                                        <option value="beverage">Beverage</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Brand</label>
+                                    <select class="form-select" name="brand" required>
+                                        <option value="" selected disabled>Select brand</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Where Consume</label>
-                                <select class="form-select" name="consume_location" required>
-                                    <option value="" selected disabled>Select location</option>
-                                    <option value="home">At Home</option>
-                                    <option value="work">At Work</option>
-                                    <option value="play">At Play</option>
-                                    <option value="school">At School</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">With Whom</label>
-                                <select class="form-select" name="with_whom" required>
-                                    <option value="" selected disabled>Select option</option>
-                                    <option value="alone">Alone</option>
-                                    <option value="with_others">With Others</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">With What</label>
-                                <select class="form-select" name="with_what" required>
-                                    <option value="" selected disabled>Select option</option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">SKU</label>
+                                    <select class="form-select" name="sku" required>
+                                        <option value="" selected disabled>Select SKU size</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Amount Paid (₦)</label>
+                                    <input type="number" step="0.01" class="form-control" name="amount_paid" required>
+                                </div>
                             </div>
                         </div>
-                        <div class="row" id="additionalBrandContainer" style="display: none;">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Additional Brand</label>
-                                <input type="text" class="form-control" name="additional_brand" placeholder="Enter additional brand">
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Section 4: Geolocation Capture -->
-                    <div class="form-section">
-                        <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
-                        <button type="button" class="btn btn-primary" id="getLocationBtn">
-                            <i class="bi bi-geo-alt-fill"></i> Capture Current Location
-                        </button>
-                        <div id="locationStatus" class="location-status status-waiting">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Attempting to capture location...</span>
+                        <!-- Section 3: Purchase and Consumption Context -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-geo-alt"></i> Purchase and Consumption Context</h3>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Where Purchase</label>
+                                    <select class="form-select" name="purchase_location" required>
+                                        <option value="" selected disabled>Select outlet type</option>
+                                        <option value="supermarket">Supermarket</option>
+                                        <option value="convenience_store">Convenience Store</option>
+                                        <option value="restaurant">Restaurant</option>
+                                        <option value="online">Online</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Where Consume</label>
+                                    <select class="form-select" name="consume_location" required>
+                                        <option value="" selected disabled>Select location</option>
+                                        <option value="home">At Home</option>
+                                        <option value="work">At Work</option>
+                                        <option value="play">At Play</option>
+                                        <option value="school">At School</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">With Whom</label>
+                                    <select class="form-select" name="with_whom" required>
+                                        <option value="" selected disabled>Select option</option>
+                                        <option value="alone">Alone</option>
+                                        <option value="with_others">With Others</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">With What</label>
+                                    <select class="form-select" name="with_what" required>
+                                        <option value="" selected disabled>Select option</option>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row" id="additionalBrandContainer" style="display: none;">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Additional Brand</label>
+                                    <input type="text" class="form-control" name="additional_brand" placeholder="Enter additional brand">
+                                </div>
+                            </div>
                         </div>
-                        <input type="hidden" id="latitude" name="latitude">
-                        <input type="hidden" id="longitude" name="longitude">
-                        <input type="hidden" id="accuracy" name="accuracy">
-                    </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success">Submit Consumption</button>
-                    </div>
-                </form>
+                        <!-- Section 4: Geolocation Capture -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
+                            <button type="button" class="btn btn-primary" id="getLocationBtn">
+                                <i class="bi bi-geo-alt-fill"></i> Capture Current Location
+                            </button>
+                            <div id="locationStatus" class="location-status status-waiting">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span>Attempting to capture location...</span>
+                            </div>
+                            <input type="hidden" id="latitude" name="latitude">
+                            <input type="hidden" id="longitude" name="longitude">
+                            <input type="hidden" id="accuracy" name="accuracy">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Submit Consumption</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- AI Capture Content -->
+                <div id="aiCaptureContent" style="display: none;">
+                    <p>Development in progress</p>
+                </div>
             </div>
         </div>
     </div>
@@ -542,6 +590,30 @@
         if (window.innerWidth >= 992) {
             document.querySelector('.content').style.marginLeft = '220px';
         }
+
+        // Capture mode toggle
+        const manualCaptureBtn = document.getElementById('manualCaptureBtn');
+        const aiCaptureBtn = document.getElementById('aiCaptureBtn');
+        const manualCaptureContent = document.getElementById('manualCaptureContent');
+        const aiCaptureContent = document.getElementById('aiCaptureContent');
+
+        manualCaptureBtn.addEventListener('click', () => {
+            manualCaptureBtn.classList.remove('inactive');
+            manualCaptureBtn.classList.add('active');
+            aiCaptureBtn.classList.remove('active');
+            aiCaptureBtn.classList.add('inactive');
+            manualCaptureContent.style.display = 'block';
+            aiCaptureContent.style.display = 'none';
+        });
+
+        aiCaptureBtn.addEventListener('click', () => {
+            aiCaptureBtn.classList.remove('inactive');
+            aiCaptureBtn.classList.add('active');
+            manualCaptureBtn.classList.remove('active');
+            manualCaptureBtn.classList.add('inactive');
+            aiCaptureContent.style.display = 'block';
+            manualCaptureContent.style.display = 'none';
+        });
 
         // Show/hide additional brand field
         document.querySelector('select[name="with_what"]').addEventListener('change', function() {
