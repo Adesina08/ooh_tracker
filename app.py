@@ -21,7 +21,7 @@ app.config['DB_USER'] = 'ooh_tracker_db_user'
 app.config['DB_PASSWORD'] = 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'
 app.config['DB_PORT'] = '5432'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'wav', 'm4a'}
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 
 # Email configuration settings
@@ -151,7 +151,7 @@ def dashboard():
             id, product_category, brand, sku, amount_paid, purchase_location,
             consume_location, with_whom, to_char(created_at, 'YYYY-MM-DD HH24:MI') as date,
             CASE 
-                WHEN additional_product_category IS NOT NULL THEN 'Yes'
+                WHEN additional_brand IS NOT NULL THEN 'Yes'
                 ELSE 'No'
             END as had_additional_items
         FROM consumption_records
@@ -304,6 +304,19 @@ def reset_password(token):
     conn.close()
     return render_template('reset_password.html', token=token)
 
+@app.route('/api/get-brands-and-skus', methods=['GET'])
+@login_required
+def get_brands_and_skus():
+    product_category = request.args.get('product_category')
+    # Static data for now; replace with DB query if you have a brands/skus table
+    data = {
+        'snack': {'brands': ['Brand A', 'Brand B', 'Brand C'], 'skus': ['Small', 'Medium', 'Large']},
+        'meal': {'brands': ['Brand X', 'Brand Y', 'Brand Z'], 'skus': ['Regular', 'Family', 'Large']},
+        'beverage': {'brands': ['Brand P', 'Brand Q', 'Brand R'], 'skus': ['250ml', '500ml', '1L']},
+        'other': {'brands': ['Brand Generic'], 'skus': ['Standard', 'Custom']}
+    }
+    return jsonify(data.get(product_category, {'brands': [], 'skus': []}))
+
 @app.route('/api/submit-consumption', methods=['POST'])
 @login_required
 def submit_consumption():
@@ -319,15 +332,9 @@ def submit_consumption():
         latitude = request.form.get('latitude')
         longitude = request.form.get('longitude')
         accuracy = request.form.get('accuracy')
-        additional_product_category = request.form.get('additional_product_category')
         additional_brand = request.form.get('additional_brand')
-        additional_sku = request.form.get('additional_sku')
-        additional_amount_paid = request.form.get('additional_amount_paid')
-        additional_purchase_location = request.form.get('additional_purchase_location')
 
         photo_path = None
-        video_path = None
-        audio_path = None
 
         if 'photo' in request.files:
             photo = request.files['photo']
@@ -336,22 +343,8 @@ def submit_consumption():
                 photo_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 photo.save(photo_path)
                 photo_path_db = f"uploads/{filename}"
-
-        if 'video' in request.files:
-            video = request.files['video']
-            if video.filename and allowed_file(video.filename):
-                filename = secure_filename(f"{uuid.uuid4()}_{video.filename}")
-                video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                video.save(video_path)
-                video_path_db = f"uploads/{filename}"
-
-        if 'audio' in request.files:
-            audio = request.files['audio']
-            if audio.filename and allowed_file(audio.filename):
-                filename = secure_filename(f"{uuid.uuid4()}_{audio.filename}")
-                audio_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                audio.save(audio_path)
-                audio_path_db = f"uploads/{filename}"
+            else:
+                return jsonify({'success': False, 'message': 'Invalid photo file format'}), 400
 
         required_fields = {
             'product_category': product_category,
@@ -373,20 +366,15 @@ def submit_consumption():
             INSERT INTO consumption_records (
                 user_id, product_category, brand, sku, amount_paid, purchase_location,
                 consume_location, with_whom, with_what, latitude, longitude, accuracy,
-                additional_product_category, additional_brand, additional_sku,
-                additional_amount_paid, additional_purchase_location,
-                photo_path, video_path, audio_path
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                additional_brand, photo_path
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         values = (
             session['user_id'], product_category, brand, sku, float(amount_paid), purchase_location,
             consume_location, with_whom, with_what, float(latitude) if latitude else None,
             float(longitude) if longitude else None, float(accuracy) if accuracy else None,
-            additional_product_category, additional_brand, additional_sku,
-            float(additional_amount_paid) if additional_amount_paid else None,
-            additional_purchase_location, photo_path_db if photo_path else None,
-            video_path_db if video_path else None, audio_path_db if audio_path else None
+            additional_brand, photo_path_db if photo_path else None
         )
 
         cur.execute(query, values)
