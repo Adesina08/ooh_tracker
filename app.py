@@ -1,24 +1,25 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
-from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 import os
 import uuid
-import json
-from functools import wraps
-import secrets
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import smtplib
 from email.mime.text import MIMEText
+from functools import wraps
+import secrets
 
 app = Flask(__name__)
 
 # Configuration settings
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
-app.config['MYSQL_HOST'] = 'sql8.freesqldatabase.com'
-app.config['MYSQL_USER'] = 'sql8786924'
-app.config['MYSQL_PASSWORD'] = 'kBXsWnbhwA'
-app.config['MYSQL_DB'] = 'sql8786924'
+app.config['DB_HOST'] = 'dpg-d1m16indiees7389jq50-a'
+app.config['DB_NAME'] = 'ooh_tracker_db'
+app.config['DB_USER'] = 'ooh_tracker_db_user'
+app.config['DB_PASSWORD'] = 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'
+app.config['DB_PORT'] = '5432'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'mp3', 'wav', 'm4a'}
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
@@ -30,9 +31,19 @@ app.config['MAIL_USERNAME'] = 'seun080ade@gmail.com'  # Replace with your Gmail 
 app.config['MAIL_PASSWORD'] = 'fjfs tlnw smgs rrf'  # Replace with your Gmail App Password
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_DEFAULT_SENDER'] = 'seun080ade@gmail.com'  # Replace with your Gmail address
+app.config['MAIL_DEFAULT_SENDER'] = 'seun080ade@gmail.com'
 
-mysql = MySQL(app)
+# Database connection
+def get_db_connection():
+    conn = psycopg2.connect(
+        host=app.config['DB_HOST'],
+        database=app.config['DB_NAME'],
+        user=app.config['DB_USER'],
+        password=app.config['DB_PASSWORD'],
+        port=app.config['DB_PORT']
+    )
+    return conn
+
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Decorator to check if user is logged in
@@ -59,13 +70,15 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
+        conn.close()
         
-        if user and check_password_hash(user[1], password):
-            session['user_id'] = user[0]
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = user['id']
             flash('Logged in successfully!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -80,20 +93,22 @@ def register():
         password = request.form['password']
         hashed_password = generate_password_hash(password)
         
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
         try:
             cur.execute(
                 "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
                 (name, email, hashed_password)
             )
-            mysql.connection.commit()
+            conn.commit()
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
-        except Exception as e:
-            mysql.connection.rollback()
-            flash('Registration failed. Please try again.', 'danger')
+        except psycopg2.Error as e:
+            conn.rollback()
+            flash('Registration failed. Email may already be in use.', 'danger')
         finally:
             cur.close()
+            conn.close()
     return render_template('register.html')
 
 @app.route('/logout')
@@ -106,9 +121,10 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT name FROM users WHERE id = %s", (session['user_id'],))
-    user_name = cur.fetchone()[0]
+    user_name = cur.fetchone()['name']
     cur.execute("""
         SELECT 
             COUNT(*) as total_entries,
@@ -133,7 +149,7 @@ def dashboard():
     cur.execute("""
         SELECT 
             id, product_category, brand, sku, amount_paid, purchase_location,
-            amount_paid, purchase_location, consume_location, with_whom, DATE_FORMAT(created_at, '%%Y-%%m-%%d %%H:%%i') as date,
+            consume_location, with_whom, to_char(created_at, 'YYYY-MM-DD HH24:MI') as date,
             CASE 
                 WHEN additional_product_category IS NOT NULL THEN 'Yes'
                 ELSE 'No'
@@ -154,24 +170,24 @@ def dashboard():
         GROUP BY product_category
     """, (session['user_id'],))
     consumption_by_category_raw = cur.fetchall()
-    # Convert tuples to dictionaries
     consumption_by_category = [
         {
-            'product_category': row[0],
-            'count': row[1],
-            'total_spent': row[2] if row[2] is not None else 0
+            'product_category': row['product_category'],
+            'count': row['count'],
+            'total_spent': row['total_spent'] if row['total_spent'] is not None else 0
         }
         for row in consumption_by_category_raw
     ]
     cur.close()
+    conn.close()
     return render_template(
         'dashboard.html',
         user_name=user_name,
-        total_entries=stats[0],
-        unique_brands=stats[1],
-        avg_spending=stats[2],
-        locations_visited=stats[3],
-        top_purchase_location=top_purchase_location[0] if top_purchase_location else 'N/A',
+        total_entries=stats['total_entries'],
+        unique_brands=stats['unique_brands'],
+        avg_spending=stats['avg_spending'],
+        locations_visited=stats['locations_visited'],
+        top_purchase_location=top_purchase_location['purchase_location'] if top_purchase_location else 'N/A',
         recent_activities=recent_activities,
         consumption_by_category=consumption_by_category
     )
@@ -191,29 +207,28 @@ def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
         
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT id FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         
         if user:
-            # Generate token
             token = secrets.token_urlsafe(32)
             expires = datetime.now() + timedelta(hours=1)
             
-            # Store token in database
             cur.execute("""
                 UPDATE users 
                 SET reset_token = %s, reset_token_expires = %s 
                 WHERE email = %s
             """, (token, expires, email))
-            mysql.connection.commit()
+            conn.commit()
             
-            # Send email
             reset_link = url_for('reset_password', token=token, _external=True)
             send_password_reset_email(email, reset_link)
             
-        # Always show success message (even if email doesn't exist)
         flash('If an account exists with this email, you will receive a password reset link', 'info')
+        cur.close()
+        conn.close()
         return redirect(url_for('login'))
     
     return render_template('forgot_password.html')
@@ -245,19 +260,21 @@ def send_password_reset_email(email, reset_link):
         server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
         server.send_message(msg)
 
-
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    cur = mysql.connection.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("""
         SELECT id, email, reset_token_expires 
         FROM users 
-        WHERE reset_token = %s AND reset_token_expires > NOW()
+        WHERE reset_token = %s AND reset_token_expires > CURRENT_TIMESTAMP
     """, (token,))
     user = cur.fetchone()
     
     if not user:
         flash('Invalid or expired token', 'danger')
+        cur.close()
+        conn.close()
         return redirect(url_for('forgot_password'))
     
     if request.method == 'POST':
@@ -266,29 +283,31 @@ def reset_password(token):
         
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
+            cur.close()
+            conn.close()
             return redirect(request.url)
         
-        # Update password and clear token
         hashed_password = generate_password_hash(password)
         cur.execute("""
             UPDATE users 
             SET password = %s, reset_token = NULL, reset_token_expires = NULL 
             WHERE id = %s
-        """, (hashed_password, user[0]))
-        mysql.connection.commit()
+        """, (hashed_password, user['id']))
+        conn.commit()
         cur.close()
+        conn.close()
         
         flash('Your password has been updated. Please login with your new password.', 'success')
         return redirect(url_for('login'))
     
+    cur.close()
+    conn.close()
     return render_template('reset_password.html', token=token)
 
-
-@app.route('/api/submit-consumption-mysql', methods=['POST'])
+@app.route('/api/submit-consumption', methods=['POST'])
 @login_required
 def submit_consumption():
     try:
-        # Extract form data
         product_category = request.form.get('product_category')
         brand = request.form.get('brand')
         sku = request.form.get('sku')
@@ -300,44 +319,40 @@ def submit_consumption():
         latitude = request.form.get('latitude')
         longitude = request.form.get('longitude')
         accuracy = request.form.get('accuracy')
+        additional_product_category = request.form.get('additional_product_category')
+        additional_brand = request.form.get('additional_brand')
+        additional_sku = request.form.get('additional_sku')
+        additional_amount_paid = request.form.get('additional_amount_paid')
+        additional_purchase_location = request.form.get('additional_purchase_location')
 
-        # Handle additional product info (optional fields)
-        additional_product_category = request.form.get('additional_product_category', None)
-        additional_brand = request.form.get('additional_brand', None)
-        additional_sku = request.form.get('additional_sku', None)
-        additional_amount_paid = request.form.get('additional_amount_paid', None)
-        additional_purchase_location = request.form.get('additional_purchase_location', None)
-
-        # Handle file uploads
         photo_path = None
         video_path = None
         audio_path = None
 
-        # Process photo upload
         if 'photo' in request.files:
             photo = request.files['photo']
             if photo.filename and allowed_file(photo.filename):
                 filename = secure_filename(f"{uuid.uuid4()}_{photo.filename}")
-                photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                photo_path = f"uploads/{filename}"
+                photo_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                photo.save(photo_path)
+                photo_path_db = f"uploads/{filename}"
 
-        # Process video upload
         if 'video' in request.files:
             video = request.files['video']
             if video.filename and allowed_file(video.filename):
                 filename = secure_filename(f"{uuid.uuid4()}_{video.filename}")
-                video.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                video_path = f"uploads/{filename}"
+                video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                video.save(video_path)
+                video_path_db = f"uploads/{filename}"
 
-        # Process audio upload
         if 'audio' in request.files:
             audio = request.files['audio']
             if audio.filename and allowed_file(audio.filename):
                 filename = secure_filename(f"{uuid.uuid4()}_{audio.filename}")
-                audio.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                audio_path = f"uploads/{filename}"
+                audio_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                audio.save(audio_path)
+                audio_path_db = f"uploads/{filename}"
 
-        # Validate required fields
         required_fields = {
             'product_category': product_category,
             'brand': brand,
@@ -352,8 +367,8 @@ def submit_consumption():
             if not field_value:
                 return jsonify({'success': False, 'message': f'Missing required field: {field_name}'}), 400
 
-        # Insert data into MySQL
-        cur = mysql.connection.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
         query = """
             INSERT INTO consumption_records (
                 user_id, product_category, brand, sku, amount_paid, purchase_location,
@@ -362,6 +377,7 @@ def submit_consumption():
                 additional_amount_paid, additional_purchase_location,
                 photo_path, video_path, audio_path
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """
         values = (
             session['user_id'], product_category, brand, sku, float(amount_paid), purchase_location,
@@ -369,17 +385,26 @@ def submit_consumption():
             float(longitude) if longitude else None, float(accuracy) if accuracy else None,
             additional_product_category, additional_brand, additional_sku,
             float(additional_amount_paid) if additional_amount_paid else None,
-            additional_purchase_location, photo_path, video_path, audio_path
+            additional_purchase_location, photo_path_db if photo_path else None,
+            video_path_db if video_path else None, audio_path_db if audio_path else None
         )
 
         cur.execute(query, values)
-        mysql.connection.commit()
+        record_id = cur.fetchone()[0]
+        conn.commit()
         cur.close()
+        conn.close()
 
-        return jsonify({'success': True, 'message': 'Consumption recorded successfully'})
+        return jsonify({
+            'success': True,
+            'message': 'Consumption recorded successfully',
+            'record_id': record_id
+        })
 
-    except Exception as e:
-        mysql.connection.rollback()
+    except psycopg2.Error as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 if __name__ == '__main__':
