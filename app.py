@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # Configuration settings
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
-app.config['DB_HOST'] = 'dpg-d1m16indiees7389jq50-a'
+app.config['DB_HOST'] = 'dpg-d1m16indiees7389jq50-a.oregon-postgres.render.com'
 app.config['DB_NAME'] = 'ooh_tracker_db'
 app.config['DB_USER'] = 'ooh_tracker_db_user'
 app.config['DB_PASSWORD'] = 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'
