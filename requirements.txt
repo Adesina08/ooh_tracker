@@ -5,3 +5,4 @@ python-dotenv
 gunicorn
 psycopg2
 librosa
+ffmpeg-python
