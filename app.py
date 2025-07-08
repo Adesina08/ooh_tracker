@@ -11,9 +11,7 @@ import whisper
 import re
 import logging
 
-
 app = Flask(__name__)
-
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key')
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'mov'}
@@ -22,10 +20,10 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
 # Database configuration
 db_params = {
-    'dbname': os.environ.get('DB_NAME', 'ooh_tracker_db'),
-    'user': os.environ.get('DB_USER', 'ooh_tracker_db_user'),
-    'password': os.environ.get('DB_PASSWORD', 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'),
-    'host': os.environ.get('DB_HOST', 'dpg-d1m16indiees7389jq50-a.oregon-postgres.render.com'),
+    'dbname': os.environ.get('DB_NAME', 'ooh_tracker'),
+    'user': os.environ.get('DB_USER', 'postgres'),
+    'password': os.environ.get('DB_PASSWORD', 'password'),
+    'host': os.environ.get('DB_HOST', 'localhost'),
     'port': os.environ.get('DB_PORT', '5432')
 }
 
@@ -108,6 +106,24 @@ def register():
             cur.close()
             conn.close()
     return render_template('register.html')
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT id FROM users WHERE email = %s', (email,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user:
+            # Placeholder for sending reset email (implement with smtplib or SendGrid)
+            flash('Password reset instructions sent to your email.', 'success')
+        else:
+            flash('No account found with that email.', 'danger')
+        return redirect(url_for('login'))
+    return render_template('forgot_password.html')
 
 @app.route('/dashboard')
 def dashboard():
