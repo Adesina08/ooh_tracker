@@ -19,7 +19,7 @@ import logging
 app = Flask(__name__)
 
 # Configuration settings
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
 app.config['DB_HOST'] = 'dpg-d1m16indiees7389jq50-a.oregon-postgres.render.com'
 app.config['DB_NAME'] = 'ooh_tracker_db'
 app.config['DB_USER'] = 'ooh_tracker_db_user'
@@ -49,8 +49,7 @@ def get_db_connection():
         database=app.config['DB_NAME'],
         user=app.config['DB_USER'],
         password=app.config['DB_PASSWORD'],
-        port=app.config['DB_PORT'],
-        cursor_factory=RealDictCursor
+        port=app.config['DB_PORT']
     )
     return conn
 
@@ -91,15 +90,14 @@ def login():
         password = request.form['password']
         
         conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT id, password, name FROM users WHERE email = %s", (email,))
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
         conn.close()
         
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
-            session['username'] = user['name']
             flash('Logged in successfully!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -136,7 +134,6 @@ def register():
 @login_required
 def logout():
     session.pop('user_id', None)
-    session.pop('username', None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
 
@@ -144,7 +141,7 @@ def logout():
 @login_required
 def dashboard():
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT name FROM users WHERE id = %s", (session['user_id'],))
     user_name = cur.fetchone()['name']
     cur.execute("""
@@ -224,13 +221,13 @@ def track():
 def instructions():
     return render_template('instructions.html')
 
-@app.route('/forgot_password', methods=['GET', 'POST'])
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
         
         conn = get_db_connection()
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("SELECT id FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         
@@ -285,7 +282,7 @@ def send_password_reset_email(email, reset_link):
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("""
         SELECT id, email, reset_token_expires 
         FROM users 
@@ -305,9 +302,9 @@ def reset_password(token):
         
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
-            cur.close()
-            conn.close()
-            return redirect(request.url)
+        cur.close()
+        conn.close()
+        return redirect(request.url)
         
         hashed_password = generate_password_hash(password)
         cur.execute("""
