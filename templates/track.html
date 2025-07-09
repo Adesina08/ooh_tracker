@@ -211,7 +211,7 @@
             border-radius: 0.5rem;
             overflow: hidden;
         }
-        .media-item img {
+        .media-item img, .media-item video {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -260,18 +260,19 @@
         .checkbox-option {
             flex: 1 0 45%;
         }
-        .range-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: -10px;
-            font-size: 0.85rem;
-            color: var(--secondary);
+        .ai-field-detected {
+            border-color: var(--success);
         }
-        #aiCaptureContent {
+        .ai-field-not-detected {
+            border-color: var(--danger);
+        }
+        .ai-loading {
             text-align: center;
             padding: 2rem;
-            color: var(--secondary);
-            font-size: 1.2rem;
+        }
+        .ai-error {
+            color: var(--danger);
+            margin-top: 1rem;
         }
         @media (min-width: 992px) {
             .navbar {
@@ -403,10 +404,10 @@
         <div class="offcanvas-body">
             <ul class="nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
+                    <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="nav-icon bi bi-speedometer2"></i>Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
+                    <a class="nav-link active" href="{{ url_for('track') }}"><i class="nav-icon bi bi-plus-circle"></i>Track Consumption</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('instructions') }}"><i class="nav-icon bi bi-info-circle"></i>Instructions</a>
@@ -437,8 +438,8 @@
                 <h2 class="mb-4">Track Your Consumption</h2>
                 <!-- Capture Mode Buttons -->
                 <div class="capture-mode-buttons">
-                    <button type="button" class="capture-mode-btn active" id="manualCaptureBtn">Manual Capture</button>
-                    <button type="button" class="capture-mode-btn inactive" id="aiCaptureBtn">AI Capture</button>
+                    <button type="button" class="capture-mode-btn active" id="manualCaptureBtn"><i class="bi bi-pencil-fill me-1"></i>Manual Capture</button>
+                    <button type="button" class="capture-mode-btn inactive" id="aiCaptureBtn"><i class="bi bi-camera-video-fill me-1"></i>AI Capture</button>
                 </div>
 
                 <!-- Manual Capture Content -->
@@ -514,10 +515,10 @@
                                     <label class="form-label">Where Consume</label>
                                     <select class="form-select" name="consume_location" required>
                                         <option value="" selected disabled>Select location</option>
-                                        <option value="home">At Home</option>
-                                        <option value="work">At Work</option>
-                                        <option value="play">At Play</option>
-                                        <option value="school">At School</option>
+                                        <option value="home">Home</option>
+                                        <option value="work">Work</option>
+                                        <option value="play">Play</option>
+                                        <option value="school">School</option>
                                     </select>
                                 </div>
                             </div>
@@ -570,7 +571,136 @@
 
                 <!-- AI Capture Content -->
                 <div id="aiCaptureContent" style="display: none;">
-                    <p>Development in progress</p>
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="bi bi-camera-video-fill"></i> AI Video Capture</h3>
+                        <p class="text-muted">Upload a video (max 10MB, 1 minute, MP4/MOV) describing your consumption.</p>
+                        <div class="media-capture-container">
+                            <div class="capture-btn" id="videoCaptureBtn">
+                                <i class="bi bi-camera-video-fill"></i>
+                                <span>Upload Video</span>
+                                <input type="file" id="videoInput" name="video" accept="video/mp4,video/quicktime" style="display: none;">
+                            </div>
+                        </div>
+                        <div class="media-preview" id="videoPreview"></div>
+                        <div id="videoError" class="text-danger" style="display: none;"></div>
+                    </div>
+                    <div id="aiLoading" class="ai-loading" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Analyzing video...</p>
+                    </div>
+                    <div id="aiError" class="ai-error" style="display: none;"></div>
+                    <form method="POST" enctype="multipart/form-data" id="aiConsumptionForm" style="display: none;">
+                        <!-- Hidden video input for submission -->
+                        <input type="file" id="aiVideoInput" name="video" style="display: none;">
+                        <!-- Section 1: Product Information -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-tag"></i> Product Information</h3>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Product Category</label>
+                                    <select class="form-select" name="product_category" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <option value="snack">Snack</option>
+                                        <option value="meal">Meal</option>
+                                        <option value="beverage">Beverage</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Brand</label>
+                                    <select class="form-select" name="brand" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">SKU</label>
+                                    <select class="form-select" name="sku" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Amount Paid (₦)</label>
+                                    <input type="number" step="0.01" class="form-control" name="amount_paid" required placeholder="Not detected">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Purchase and Consumption Context -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-geo-alt"></i> Purchase and Consumption Context</h3>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Where Purchase</label>
+                                    <select class="form-select" name="purchase_location" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <option value="supermarket">Supermarket</option>
+                                        <option value="convenience_store">Convenience Store</option>
+                                        <option value="restaurant">Restaurant</option>
+                                        <option value="online">Online</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Where Consume</label>
+                                    <select class="form-select" name="consume_location" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <option value="home">Home</option>
+                                        <option value="work">Work</option>
+                                        <option value="play">Play</option>
+                                        <option value="school">School</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">With Whom</label>
+                                    <select class="form-select" name="with_whom" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <option value="alone">Alone</option>
+                                        <option value="with_others">With Others</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">With What</label>
+                                    <select class="form-select" name="with_what" required>
+                                        <option value="" selected disabled>Not detected</option>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row" id="aiAdditionalBrandContainer" style="display: none;">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Additional Brand</label>
+                                    <input type="text" class="form-control" name="additional_brand" placeholder="Not detected">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Geolocation Capture -->
+                        <div class="form-section">
+                            <h3 class="section-title"><i class="bi bi-geo-alt"></i> Geolocation</h3>
+                            <button type="button" class="btn btn-primary" id="aiGetLocationBtn">
+                                <i class="bi bi-geo-alt-fill"></i> Capture Current Location
+                            </button>
+                            <div id="aiLocationStatus" class="location-status status-waiting">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <span>Attempting to capture location...</span>
+                            </div>
+                            <input type="hidden" id="aiLatitude" name="latitude">
+                            <input type="hidden" id="aiLongitude" name="longitude">
+                            <input type="hidden" id="aiAccuracy" name="accuracy">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Submit Consumption</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -596,6 +726,13 @@
         const aiCaptureBtn = document.getElementById('aiCaptureBtn');
         const manualCaptureContent = document.getElementById('manualCaptureContent');
         const aiCaptureContent = document.getElementById('aiCaptureContent');
+        const videoInput = document.getElementById('videoInput');
+        const videoPreview = document.getElementById('videoPreview');
+        const videoError = document.getElementById('videoError');
+        const aiLoading = document.getElementById('aiLoading');
+        const aiError = document.getElementById('aiError');
+        const aiConsumptionForm = document.getElementById('aiConsumptionForm');
+        const aiVideoInput = document.getElementById('aiVideoInput');
 
         manualCaptureBtn.addEventListener('click', () => {
             manualCaptureBtn.classList.remove('inactive');
@@ -604,6 +741,7 @@
             aiCaptureBtn.classList.add('inactive');
             manualCaptureContent.style.display = 'block';
             aiCaptureContent.style.display = 'none';
+            clearAIForm();
         });
 
         aiCaptureBtn.addEventListener('click', () => {
@@ -613,50 +751,207 @@
             manualCaptureBtn.classList.add('inactive');
             aiCaptureContent.style.display = 'block';
             manualCaptureContent.style.display = 'none';
+            clearAIForm();
         });
+
+        // Clear AI form and video
+        function clearAIForm() {
+            videoInput.value = '';
+            aiVideoInput.value = '';
+            videoPreview.innerHTML = '';
+            videoError.style.display = 'none';
+            aiError.style.display = 'none';
+            aiLoading.style.display = 'none';
+            aiConsumptionForm.style.display = 'none';
+            aiConsumptionForm.reset();
+            document.getElementById('aiAdditionalBrandContainer').style.display = 'none';
+        }
+
+        // Video capture
+        document.getElementById('videoCaptureBtn').addEventListener('click', () => {
+            clearError(videoError);
+            videoInput.click();
+        });
+
+        videoInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                showError(videoError, 'No video selected.');
+                return;
+            }
+            if (!['video/mp4', 'video/quicktime'].includes(file.type)) {
+                showError(videoError, 'Please upload a valid video (MP4 or MOV).');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showError(videoError, 'Video must be 10MB or smaller.');
+                return;
+            }
+
+            // Validate duration
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.onloadedmetadata = async () => {
+                if (video.duration > 60) {
+                    showError(videoError, 'Video must be 1 minute or shorter.');
+                    URL.revokeObjectURL(video.src);
+                    videoInput.value = '';
+                    return;
+                }
+
+                // Display preview
+                videoPreview.innerHTML = '';
+                const mediaItem = document.createElement('div');
+                mediaItem.classList.add('media-item');
+                mediaItem.innerHTML = `
+                    <video src="${video.src}" controls></video>
+                    <div class="remove-media" onclick="clearAIForm()">×</div>
+                    <small>Duration: ${Math.round(video.duration)}s</small>
+                `;
+                videoPreview.appendChild(mediaItem);
+
+                // Copy file to aiVideoInput for submission
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                aiVideoInput.files = dataTransfer.files;
+
+                // Analyze video
+                aiLoading.style.display = 'block';
+                aiError.style.display = 'none';
+                aiConsumptionForm.style.display = 'none';
+                const formData = new FormData();
+                formData.append('video', file);
+                try {
+                    const response = await fetch('/api/analyze-video', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    aiLoading.style.display = 'none';
+                    if (result.success) {
+                        populateAIForm(result.data);
+                        aiConsumptionForm.style.display = 'block';
+                    } else {
+                        showError(aiError, `Error analyzing video: ${result.message}. Please review or try another video.`);
+                    }
+                } catch (error) {
+                    aiLoading.style.display = 'none';
+                    showError(aiError, 'An error occurred while analyzing the video. Try again or use Manual Capture.');
+                }
+                URL.revokeObjectURL(video.src);
+            };
+        });
+
+        // Populate AI form with extracted data
+        function populateAIForm(data) {
+            const fields = [
+                'product_category', 'brand', 'sku', 'amount_paid',
+                'purchase_location', 'consume_location', 'with_whom', 'with_what', 'additional_brand'
+            ];
+            fields.forEach(field => {
+                const element = aiConsumptionForm.querySelector(`[name="${field}"]`);
+                if (element) {
+                    if (data[field]) {
+                        element.value = data[field];
+                        element.classList.add('ai-field-detected');
+                        element.classList.remove('ai-field-not-detected');
+                    } else {
+                        element.value = '';
+                        element.classList.add('ai-field-not-detected');
+                        element.classList.remove('ai-field-detected');
+                        if (element.tagName === 'INPUT') element.placeholder = 'Not detected';
+                    }
+                }
+            });
+            // Handle additional_brand visibility
+            const withWhat = aiConsumptionForm.querySelector('[name="with_what"]');
+            const additionalBrandContainer = document.getElementById('aiAdditionalBrandContainer');
+            additionalBrandContainer.style.display = withWhat.value === 'yes' ? 'block' : 'none';
+            // Populate brand and SKU dropdowns
+            const category = data.product_category || '';
+            const brandSelect = aiConsumptionForm.querySelector('[name="brand"]');
+            const skuSelect = aiConsumptionForm.querySelector('[name="sku"]');
+            updateMainDropdowns(category, brandSelect, skuSelect, data.brand, data.sku);
+        }
+
+        // Helper functions for errors
+        function showError(element, message) {
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        function clearError(element) {
+            element.textContent = '';
+            element.style.display = 'none';
+        }
 
         // Show/hide additional brand field
         document.querySelector('select[name="with_what"]').addEventListener('change', function() {
-            const additionalBrandContainer = document.getElementById('additionalBrandContainer');
-            additionalBrandContainer.style.display = this.value === 'yes' ? 'block' : 'none';
+            document.getElementById('additionalBrandContainer').style.display = this.value === 'yes' ? 'block' : 'none';
+        });
+        aiConsumptionForm.querySelector('[name="with_what"]').addEventListener('change', function() {
+            document.getElementById('aiAdditionalBrandContainer').style.display = this.value === 'yes' ? 'block' : 'none';
         });
 
         // Helper function to update geolocation status
-        function updateLocationStatus(message, statusClass) {
-            const statusElement = document.getElementById('locationStatus');
-            statusElement.innerHTML = `<i class="bi bi-${statusClass === 'status-success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i> ${message}`;
-            statusElement.classList.remove('status-waiting', 'status-error', 'status-success');
-            statusElement.classList.add(statusClass);
+        function updateLocationStatus(element, message, statusClass) {
+            element.innerHTML = `<i class="bi bi-${statusClass === 'status-success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i> ${message}`;
+            element.classList.remove('status-waiting', 'status-error', 'status-success');
+            element.classList.add(statusClass);
         }
 
         // Geolocation capture function
-        function captureGeolocation() {
+        function captureGeolocation(statusElement, latInput, lonInput, accInput) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        document.getElementById('latitude').value = position.coords.latitude;
-                        document.getElementById('longitude').value = position.coords.longitude;
-                        document.getElementById('accuracy').value = position.coords.accuracy;
-                        updateLocationStatus('Location captured successfully!', 'status-success');
+                    position => {
+                        latInput.value = position.coords.latitude;
+                        lonInput.value = position.coords.longitude;
+                        accInput.value = position.coords.accuracy;
+                        updateLocationStatus(statusElement, 'Location captured successfully!', 'status-success');
                     },
-                    function(error) {
-                        updateLocationStatus('Unable to retrieve location. Try manual capture.', 'status-error');
+                    error => {
+                        updateLocationStatus(statusElement, 'Unable to retrieve location. Try manual capture.', 'status-error');
                     }
                 );
             } else {
-                updateLocationStatus('Geolocation is not supported by this browser.', 'status-error');
+                updateLocationStatus(statusElement, 'Geolocation is not supported by this browser.', 'status-error');
             }
         }
 
         // Auto-capture geolocation on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            captureGeolocation();
+        document.addEventListener('DOMContentLoaded', () => {
+            captureGeolocation(
+                document.getElementById('locationStatus'),
+                document.getElementById('latitude'),
+                document.getElementById('longitude'),
+                document.getElementById('accuracy')
+            );
+            captureGeolocation(
+                document.getElementById('aiLocationStatus'),
+                document.getElementById('aiLatitude'),
+                document.getElementById('aiLongitude'),
+                document.getElementById('aiAccuracy')
+            );
         });
 
         // Manual geolocation capture
-        document.getElementById('getLocationBtn').addEventListener('click', function() {
-            updateLocationStatus('Attempting to capture location...', 'status-waiting');
-            captureGeolocation();
+        document.getElementById('getLocationBtn').addEventListener('click', () => {
+            updateLocationStatus(document.getElementById('locationStatus'), 'Attempting to capture location...', 'status-waiting');
+            captureGeolocation(
+                document.getElementById('locationStatus'),
+                document.getElementById('latitude'),
+                document.getElementById('longitude'),
+                document.getElementById('accuracy')
+            );
+        });
+        document.getElementById('aiGetLocationBtn').addEventListener('click', () => {
+            updateLocationStatus(document.getElementById('aiLocationStatus'), 'Attempting to capture location...', 'status-waiting');
+            captureGeolocation(
+                document.getElementById('aiLocationStatus'),
+                document.getElementById('aiLatitude'),
+                document.getElementById('aiLongitude'),
+                document.getElementById('aiAccuracy')
+            );
         });
 
         // Photo capture
@@ -664,32 +959,20 @@
         const mediaPreview = document.getElementById('mediaPreview');
         const mediaError = document.getElementById('mediaError');
 
-        // Helper function to display errors
-        function showError(message) {
-            mediaError.textContent = message;
-            mediaError.style.display = 'block';
-        }
-
-        // Helper function to clear errors
-        function clearError() {
-            mediaError.textContent = '';
-            mediaError.style.display = 'none';
-        }
-
-        document.getElementById('photoCaptureBtn').addEventListener('click', function() {
-            clearError();
+        document.getElementById('photoCaptureBtn').addEventListener('click', () => {
+            clearError(mediaError);
             photoInput.click();
         });
 
-        photoInput.addEventListener('change', function(event) {
+        photoInput.addEventListener('change', event => {
             const file = event.target.files[0];
             if (file) {
                 if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
-                    showError('Please upload a valid image (PNG, JPG, JPEG).');
+                    showError(mediaError, 'Please upload a valid image (PNG, JPG, JPEG).');
                     return;
                 }
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = e => {
                     const mediaItem = document.createElement('div');
                     mediaItem.classList.add('media-item');
                     mediaItem.innerHTML = `<img src="${e.target.result}" alt="Photo Preview">
@@ -698,28 +981,30 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                showError('No file selected.');
+                showError(mediaError, 'No file selected.');
             }
         });
 
-        // Dynamic brand and SKU dropdowns for main product
-        function updateMainDropdowns(category, brandSelect, skuSelect) {
+        // Dynamic brand and SKU dropdowns
+        function updateMainDropdowns(category, brandSelect, skuSelect, selectedBrand = '', selectedSku = '') {
             if (category) {
                 fetch(`/api/get-brands-and-skus?product_category=${category}`)
                     .then(response => response.json())
                     .then(data => {
-                        brandSelect.innerHTML = '<option value="" selected disabled>Select brand</option>';
-                        skuSelect.innerHTML = '<option value="" selected disabled>Select SKU size</option>';
+                        brandSelect.innerHTML = '<option value="" selected disabled>Not detected</option>';
+                        skuSelect.innerHTML = '<option value="" selected disabled>Not detected</option>';
                         data.brands.forEach(brand => {
                             const option = document.createElement('option');
                             option.value = brand;
                             option.textContent = brand;
+                            if (brand === selectedBrand) option.selected = true;
                             brandSelect.appendChild(option);
                         });
                         data.skus.forEach(sku => {
                             const option = document.createElement('option');
                             option.value = sku;
                             option.textContent = sku;
+                            if (sku === selectedSku) option.selected = true;
                             skuSelect.appendChild(option);
                         });
                     })
@@ -729,54 +1014,63 @@
                         skuSelect.innerHTML = '<option value="" selected disabled>Error loading SKUs</option>';
                     });
             } else {
-                brandSelect.innerHTML = '<option value="" selected disabled>Select brand</option>';
-                skuSelect.innerHTML = '<option value="" selected disabled>Select SKU size</option>';
+                brandSelect.innerHTML = '<option value="" selected disabled>Not detected</option>';
+                skuSelect.innerHTML = '<option value="" selected disabled>Not detected</option>';
             }
         }
 
-        // Update main product dropdowns when product category changes
+        // Update dropdowns when product category changes
         document.querySelector('select[name="product_category"]').addEventListener('change', function() {
             const brandSelect = document.querySelector('select[name="brand"]');
             const skuSelect = document.querySelector('select[name="sku"]');
             updateMainDropdowns(this.value, brandSelect, skuSelect);
         });
-
-        // Form submission handler
-        document.getElementById('consumptionForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const requiredFields = this.querySelectorAll('[required]');
-            let isValid = true;
-            requiredFields.forEach(field => {
-                if (!field.value) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            if (!isValid) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            const formData = new FormData(this);
-            fetch('/api/submit-consumption', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Consumption recorded successfully!');
-                    window.location.href = '/dashboard';
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while submitting the form');
-            });
+        aiConsumptionForm.querySelector('[name="product_category"]').addEventListener('change', function() {
+            const brandSelect = aiConsumptionForm.querySelector('[name="brand"]');
+            const skuSelect = aiConsumptionForm.querySelector('[name="sku"]');
+            updateMainDropdowns(this.value, brandSelect, skuSelect);
         });
+
+        // Form submission handlers
+        function handleFormSubmission(form, errorElement) {
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                requiredFields.forEach(field => {
+                    if (!field.value) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+                if (!isValid) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                const formData = new FormData(form);
+                try {
+                    const response = await fetch('/api/submit-consumption', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Consumption recorded successfully!');
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while submitting the form');
+                }
+            });
+        }
+
+        handleFormSubmission(document.getElementById('consumptionForm'), mediaError);
+        handleFormSubmission(aiConsumptionForm, aiError);
     </script>
 </body>
 </html>
