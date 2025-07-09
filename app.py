@@ -15,6 +15,7 @@ import librosa
 import whisper
 import re
 import logging
+import pytz
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ app.config['DB_USER'] = 'ooh_tracker_db_user'
 app.config['DB_PASSWORD'] = 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'
 app.config['DB_PORT'] = '5432'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov'}
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'webm'}
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 
 # Email configuration settings
@@ -170,14 +171,14 @@ def dashboard():
     cur.execute("""
         SELECT 
             id, product_category, brand, sku, amount_paid, purchase_location,
-            consume_location, with_whom, to_char(created_at, 'YYYY-MM-DD HH24:MI') as date,
+            consume_location, with_whom, to_char(submission_timestamp, 'YYYY-MM-DD HH24:MI') as date,
             CASE 
                 WHEN additional_product_category IS NOT NULL THEN 'Yes'
                 ELSE 'No'
             END as had_additional_items
         FROM consumption_records
         WHERE user_id = %s
-        ORDER BY created_at DESC
+        ORDER BY submission_timestamp DESC
         LIMIT 5
     """, (session['user_id'],))
     recent_activities = cur.fetchall()
@@ -352,6 +353,7 @@ def submit_consumption():
         additional_sku = request.form.get('additional_sku')
         additional_amount_paid = request.form.get('additional_amount_paid')
         additional_purchase_location = request.form.get('additional_purchase_location')
+        submission_timestamp = request.form.get('submission_timestamp')
 
         photo_path = None
         video_path = None
@@ -386,6 +388,16 @@ def submit_consumption():
             if not field_value:
                 return jsonify({'success': False, 'message': f'Missing required field: {field_name}'}), 400
 
+        # Parse submission_timestamp
+        try:
+            timestamp = datetime.strptime(submission_timestamp, '%Y-%m-%d %H:%M:%S %Z') if submission_timestamp else None
+            if timestamp:
+                wat = pytz.timezone('Africa/Lagos')
+                timestamp = wat.localize(timestamp)
+        except ValueError:
+            timestamp = None
+            logger.warning("Invalid submission_timestamp format; using NULL")
+
         conn = get_db_connection()
         cur = conn.cursor()
         query = """
@@ -394,8 +406,8 @@ def submit_consumption():
                 consume_location, with_whom, with_what, latitude, longitude, accuracy,
                 additional_product_category, additional_brand, additional_sku,
                 additional_amount_paid, additional_purchase_location,
-                photo_path, video_path
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                photo_path, video_path, submission_timestamp
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
         values = (
@@ -405,7 +417,7 @@ def submit_consumption():
             additional_product_category, additional_brand, additional_sku,
             float(additional_amount_paid) if additional_amount_paid else None,
             additional_purchase_location, photo_path_db if photo_path else None,
-            video_path_db if video_path else None
+            video_path_db if video_path else None, timestamp
         )
 
         cur.execute(query, values)
@@ -457,8 +469,8 @@ def analyze_video():
         # Extract audio
         audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
         stream = ffmpeg.input(video_path)
-        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, y=True)
-        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
+        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, **{'y': None})
+        ffmpeg.run(stream, overwrite_output=True, capture_stdout=True, capture_stderr=True)
         
         # Preprocess audio with Librosa
         y, sr = librosa.load(audio_path, sr=16000)
@@ -477,6 +489,7 @@ def analyze_video():
         # Parse transcript
         data = parse_transcript(transcript)
         data['video_path'] = f"uploads/{filename}"
+        data['submission_timestamp'] = request.form.get('submission_timestamp', None)
         
         return jsonify({'success': True, 'data': data})
     except ffmpeg.Error as e:
