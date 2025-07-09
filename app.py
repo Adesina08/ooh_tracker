@@ -458,6 +458,7 @@ def analyze_video():
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(video_path)
     
+    audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
     try:
         # Validate video duration
         probe = ffmpeg.probe(video_path)
@@ -466,11 +467,10 @@ def analyze_video():
             os.remove(video_path)
             return jsonify({'success': False, 'message': 'Video exceeds 1-minute limit'}), 400
         
-        # Extract audio
-        audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
+        # Extract audio to WAV
         stream = ffmpeg.input(video_path)
-        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, **{'y': None})
-        ffmpeg.run(stream, overwrite_output=True, capture_stdout=True, capture_stderr=True)
+        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, format='wav', loglevel='error')
+        ffmpeg.run(stream, overwrite_output=True)
         
         # Preprocess audio with Librosa
         y, sr = librosa.load(audio_path, sr=16000)
@@ -482,10 +482,6 @@ def analyze_video():
         result = model.transcribe(audio_path)
         transcript = result['text'].lower()
         
-        # Clean up temporary audio
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
-        
         # Parse transcript
         data = parse_transcript(transcript)
         data['video_path'] = f"uploads/{filename}"
@@ -494,14 +490,16 @@ def analyze_video():
         return jsonify({'success': True, 'data': data})
     except ffmpeg.Error as e:
         logger.error(f"FFmpeg error: {e.stderr.decode()}")
-        if os.path.exists(video_path):
-            os.remove(video_path)
         return jsonify({'success': False, 'message': f'FFmpeg error: {e.stderr.decode()}'}), 500
     except Exception as e:
         logger.error(f"Error analyzing video: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        # Clean up temporary audio and video files
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
         if os.path.exists(video_path):
             os.remove(video_path)
-        return jsonify({'success': False, 'message': str(e)}), 500
 
 def parse_transcript(transcript):
     data = {
