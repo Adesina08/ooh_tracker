@@ -458,7 +458,9 @@ def analyze_video():
         audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.mp3")
         stream = ffmpeg.input(video_path)
         stream = ffmpeg.output(stream, audio_path, acodec='mp3', vn=True)
-        ffmpeg.run(stream, overwrite_output=True)
+        stream = stream.overwrite_output()
+        ffmpeg.run(stream)
+
         
         # Preprocess audio with Librosa
         y, sr = librosa.load(audio_path, sr=None)
