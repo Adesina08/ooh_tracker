@@ -7,3 +7,4 @@ psycopg2
 librosa
 ffmpeg-python
 whisper
+pytz
