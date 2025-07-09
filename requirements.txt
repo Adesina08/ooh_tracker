@@ -8,3 +8,4 @@ librosa
 ffmpeg-python
 whisper
 pytz
+resampy
