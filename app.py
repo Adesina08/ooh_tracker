@@ -120,6 +120,7 @@ def register():
                 (name, email, hashed_password)
             )
             conn.commit()
+            session['username'] = name  # Added for dashboard consistency
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
         except psycopg2.Error as e:
@@ -134,6 +135,7 @@ def register():
 @login_required
 def logout():
     session.pop('user_id', None)
+    session.pop('username', None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('index'))
 
@@ -302,9 +304,9 @@ def reset_password(token):
         
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
-        cur.close()
-        conn.close()
-        return redirect(request.url)
+            cur.close()
+            conn.close()
+            return redirect(request.url)
         
         hashed_password = generate_password_hash(password)
         cur.execute("""
