@@ -512,7 +512,6 @@ def analyze_video():
     finally:
         if os.path.exists(audio_path):
             os.remove(audio_path)
-        if os
 
 
 def parse_transcript(transcript):
