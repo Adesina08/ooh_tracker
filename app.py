@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -455,30 +455,35 @@ def analyze_video():
             return jsonify({'success': False, 'message': 'Video exceeds 1-minute limit'}), 400
         
         # Extract audio
-        audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.mp3")
+        audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
         stream = ffmpeg.input(video_path)
-        stream = ffmpeg.output(stream, audio_path, acodec='mp3', vn=True).overwrite_output()
-        ffmpeg.run(stream)
+        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, y=True)
+        ffmpeg.run(stream, capture_stdout=True, capture_stderr=True)
         
         # Preprocess audio with Librosa
-        y, sr = librosa.load(audio_path, sr=None)
-        y, _ = librosa.effects.trim(y)  # Trim silence
-        librosa.output.write_wav(audio_path.replace('.mp3', '.wav'), y, sr)
+        y, sr = librosa.load(audio_path, sr=16000)
+        y, _ = librosa.effects.trim(y)
+        librosa.output.write_wav(audio_path, y, sr)
         
         # Transcribe with Whisper
         model = whisper.load_model('base')
-        result = model.transcribe(audio_path.replace('.mp3', '.wav'))
+        result = model.transcribe(audio_path)
         transcript = result['text'].lower()
         
         # Clean up temporary audio
-        os.remove(audio_path)
-        os.remove(audio_path.replace('.mp3', '.wav'))
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
         
         # Parse transcript
         data = parse_transcript(transcript)
         data['video_path'] = f"uploads/{filename}"
         
         return jsonify({'success': True, 'data': data})
+    except ffmpeg.Error as e:
+        logger.error(f"FFmpeg error: {e.stderr.decode()}")
+        if os.path.exists(video_path):
+            os.remove(video_path)
+        return jsonify({'success': False, 'message': f'FFmpeg error: {e.stderr.decode()}'}), 500
     except Exception as e:
         logger.error(f"Error analyzing video: {str(e)}")
         if os.path.exists(video_path):
@@ -621,6 +626,12 @@ def parse_transcript(transcript):
                 break
     
     return data
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    response = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    response.headers['Cache-Control'] = 'public, max-age=31536000'  # Cache for 1 year
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)
