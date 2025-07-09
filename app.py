@@ -16,6 +16,7 @@ import whisper
 import re
 import logging
 import pytz
+import soundfile as sf  # Replaced librosa.output.write_wav
 
 app = Flask(__name__)
 
@@ -460,22 +461,24 @@ def analyze_video():
     
     audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
     try:
-        # Validate video duration
+        # Validate video duration and file integrity
         probe = ffmpeg.probe(video_path)
         duration = float(probe['format']['duration'])
         if duration > 60:
-            os.remove(video_path)
             return jsonify({'success': False, 'message': 'Video exceeds 1-minute limit'}), 400
         
-        # Extract audio to WAV
+        # Check WAV file size after conversion (limit to 10MB)
         stream = ffmpeg.input(video_path)
-        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, vn=True, format='wav', loglevel='error')
+        stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, ac=1, vn=True, format='wav', loglevel='error')
         ffmpeg.run(stream, overwrite_output=True)
         
+        if os.path.getsize(audio_path) > 10 * 1024 * 1024:  # 10MB limit
+            return jsonify({'success': False, 'message': 'Extracted audio exceeds 10MB limit'}), 400
+        
         # Preprocess audio with Librosa
-        y, sr = librosa.load(audio_path, sr=16000)
+        y, sr = librosa.load(audio_path, sr=16000, mono=True)
         y, _ = librosa.effects.trim(y)
-        librosa.output.write_wav(audio_path, y, sr)
+        sf.write(audio_path, y, sr)  # Replaced librosa.output.write_wav
         
         # Transcribe with Whisper
         model = whisper.load_model('base')
