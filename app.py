@@ -16,7 +16,11 @@ import whisper
 import re
 import logging
 import pytz
-import soundfile as sf  # Replaced librosa.output.write_wav
+import soundfile as sf
+import resampy
+
+# Load Whisper model once at startup (choose 'tiny' for performance)
+whisper_model = whisper.load_model('tiny')
 
 app = Flask(__name__)
 
@@ -445,52 +449,60 @@ def submit_consumption():
 def analyze_video():
     if 'video' not in request.files:
         return jsonify({'success': False, 'message': 'No video file provided'}), 400
-    
+
     file = request.files['video']
     if not file or not allowed_file(file.filename):
         return jsonify({'success': False, 'message': 'Invalid or missing video file'}), 400
-    
+
     if file.content_length > app.config['MAX_CONTENT_LENGTH']:
         return jsonify({'success': False, 'message': 'Video exceeds 16MB limit'}), 400
-    
-    # Save video
+
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = secure_filename(f"user_{session['user_id']}_{timestamp}.{file.filename.rsplit('.', 1)[1].lower()}")
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(video_path)
-    
+
     audio_path = os.path.join(app.config['UPLOAD_FOLDER'], f"temp_{timestamp}.wav")
+
     try:
-        # Validate video duration and file integrity
+        # Check video duration (limit: 60 seconds)
         probe = ffmpeg.probe(video_path)
         duration = float(probe['format']['duration'])
         if duration > 60:
             return jsonify({'success': False, 'message': 'Video exceeds 1-minute limit'}), 400
-        
-        # Check WAV file size after conversion (limit to 10MB)
+
+        # Extract audio (mono, 16kHz, PCM WAV)
         stream = ffmpeg.input(video_path)
         stream = ffmpeg.output(stream, audio_path, acodec='pcm_s16le', ar=16000, ac=1, vn=True, format='wav', loglevel='error')
         ffmpeg.run(stream, overwrite_output=True)
-        
-        if os.path.getsize(audio_path) > 10 * 1024 * 1024:  # 10MB limit
+
+        if os.path.getsize(audio_path) > 10 * 1024 * 1024:
             return jsonify({'success': False, 'message': 'Extracted audio exceeds 10MB limit'}), 400
-        
-        # Preprocess audio with Librosa
-        y, sr = librosa.load(audio_path, sr=16000, mono=True)
+
+        # Load and preprocess audio
+        y, sr = sf.read(audio_path)
+
+        if len(y.shape) > 1:
+            y = y.mean(axis=1)  # Convert to mono
+
+        if sr != 16000:
+            y = resampy.resample(y, sr, 16000)
+            sr = 16000
+
         y, _ = librosa.effects.trim(y)
-        sf.write(audio_path, y, sr)  # Replaced librosa.output.write_wav
-        
-        # Transcribe with Whisper
-        model = whisper.load_model('base')
-        result = model.transcribe(audio_path)
+        sf.write(audio_path, y, sr)
+
+        # Transcribe audio
+        result = whisper_model.transcribe(audio_path)
         transcript = result['text'].lower()
-        
+
         # Parse transcript
         data = parse_transcript(transcript)
         data['video_path'] = f"uploads/{filename}"
         data['submission_timestamp'] = request.form.get('submission_timestamp', None)
-        
+
         return jsonify({'success': True, 'data': data})
+
     except ffmpeg.Error as e:
         logger.error(f"FFmpeg error: {e.stderr.decode()}")
         return jsonify({'success': False, 'message': f'FFmpeg error: {e.stderr.decode()}'}), 500
@@ -498,11 +510,10 @@ def analyze_video():
         logger.error(f"Error analyzing video: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
-        # Clean up temporary audio and video files
         if os.path.exists(audio_path):
             os.remove(audio_path)
-        if os.path.exists(video_path):
-            os.remove(video_path)
+        if os
+
 
 def parse_transcript(transcript):
     data = {
