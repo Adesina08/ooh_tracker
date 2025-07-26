@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, send_from_directory
+from flask_wtf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -23,6 +24,7 @@ import resampy
 whisper_model = whisper.load_model('tiny')
 
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 # Configuration settings
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
