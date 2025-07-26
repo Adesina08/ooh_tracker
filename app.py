@@ -18,7 +18,10 @@ import logging
 import pytz
 import soundfile as sf
 import resampy
-import magic
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Load Whisper model once at startup (choose 'tiny' for performance)
 whisper_model = whisper.load_model('tiny')
@@ -27,24 +30,26 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 
 # Configuration settings
-app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
-app.config['DB_HOST'] = 'dpg-d1m16indiees7389jq50-a.oregon-postgres.render.com'
-app.config['DB_NAME'] = 'ooh_tracker_db'
-app.config['DB_USER'] = 'ooh_tracker_db_user'
-app.config['DB_PASSWORD'] = 'bZvhR8NpLOxIXQRnSC7qt6tn9Ny7T6jf'
-app.config['DB_PORT'] = '5432'
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'webm'}
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_me')
+app.config['DB_HOST'] = os.environ.get('DB_HOST')
+app.config['DB_NAME'] = os.environ.get('DB_NAME')
+app.config['DB_USER'] = os.environ.get('DB_USER')
+app.config['DB_PASSWORD'] = os.environ.get('DB_PASSWORD')
+app.config['DB_PORT'] = os.environ.get('DB_PORT', '5432')
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/uploads')
+app.config['ALLOWED_EXTENSIONS'] = set(os.environ.get('ALLOWED_EXTENSIONS', 'png,jpg,jpeg,mp4,mov,webm').split(','))
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
+
 
 # Email configuration settings
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USERNAME'] = 'seun080ade@gmail.com'
-app.config['MAIL_PASSWORD'] = 'fjfs tlnw smgs rrf'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_DEFAULT_SENDER'] = 'seun080ade@gmail.com'
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
