@@ -18,6 +18,7 @@ import logging
 import pytz
 import soundfile as sf
 import resampy
+import magic
 from dotenv import load_dotenv
 
 load_dotenv()
