@@ -24,6 +24,7 @@ import magic
 whisper_model = whisper.load_model('tiny')
 
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 # Configuration settings
 app.config['SECRET_KEY'] = 'your_secret_key'  # Change this to a random secret key
@@ -50,15 +51,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Database connection
+from contextlib import closing
+
 def get_db_connection():
-    conn = psycopg2.connect(
+    """Return a context manager for a PostgreSQL connection."""
+    return closing(psycopg2.connect(
         host=app.config['DB_HOST'],
         database=app.config['DB_NAME'],
         user=app.config['DB_USER'],
         password=app.config['DB_PASSWORD'],
         port=app.config['DB_PORT']
-    )
-    return conn
+    ))
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -122,12 +125,9 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id, password FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
         
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
@@ -145,23 +145,19 @@ def register():
         password = request.form['password']
         hashed_password = generate_password_hash(password)
         
-        conn = get_db_connection()
-        cur = conn.cursor()
-        try:
-            cur.execute(
-                "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
-                (name, email, hashed_password)
-            )
-            conn.commit()
-            session['username'] = name  # Added for dashboard consistency
-            flash('Registration successful! Please login.', 'success')
-            return redirect(url_for('login'))
-        except psycopg2.Error as e:
-            conn.rollback()
-            flash('Registration failed. Email may already be in use.', 'danger')
-        finally:
-            cur.close()
-            conn.close()
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            try:
+                cur.execute(
+                    "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
+                    (name, email, hashed_password)
+                )
+                conn.commit()
+                session['username'] = name  # Added for dashboard consistency
+                flash('Registration successful! Please login.', 'success')
+                return redirect(url_for('login'))
+            except psycopg2.Error as e:
+                conn.rollback()
+                flash('Registration failed. Email may already be in use.', 'danger')
     return render_template('register.html')
 
 @app.route('/logout')
@@ -175,65 +171,62 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("SELECT name FROM users WHERE id = %s", (session['user_id'],))
-    user_name = cur.fetchone()['name']
-    cur.execute("""
-        SELECT 
-            COUNT(*) as total_entries,
-            COUNT(DISTINCT brand) as unique_brands,
-            ROUND(AVG(amount_paid), 2) as avg_spending,
-            COUNT(DISTINCT consume_location) as locations_visited
-        FROM consumption_records
-        WHERE user_id = %s
-    """, (session['user_id'],))
-    stats = cur.fetchone()
-    cur.execute("""
-        SELECT 
-            purchase_location,
-            COUNT(*) as count
-        FROM consumption_records
-        WHERE user_id = %s
-        GROUP BY purchase_location
-        ORDER BY count DESC
-        LIMIT 1
-    """, (session['user_id'],))
-    top_purchase_location = cur.fetchone()
-    cur.execute("""
-        SELECT 
-            id, product_category, brand, sku, amount_paid, purchase_location,
-            consume_location, with_whom, to_char(submission_timestamp, 'YYYY-MM-DD HH24:MI') as date,
-            CASE 
-                WHEN additional_product_category IS NOT NULL THEN 'Yes'
-                ELSE 'No'
-            END as had_additional_items
-        FROM consumption_records
-        WHERE user_id = %s
-        ORDER BY submission_timestamp DESC
-        LIMIT 5
-    """, (session['user_id'],))
-    recent_activities = cur.fetchall()
-    cur.execute("""
-        SELECT 
-            product_category,
-            COUNT(*) as count,
-            SUM(amount_paid) as total_spent
-        FROM consumption_records
-        WHERE user_id = %s
-        GROUP BY product_category
-    """, (session['user_id'],))
-    consumption_by_category_raw = cur.fetchall()
-    consumption_by_category = [
-        {
-            'product_category': row['product_category'],
-            'count': row['count'],
-            'total_spent': row['total_spent'] if row['total_spent'] is not None else 0
-        }
-        for row in consumption_by_category_raw
-    ]
-    cur.close()
-    conn.close()
+    with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("SELECT name FROM users WHERE id = %s", (session['user_id'],))
+        user_name = cur.fetchone()['name']
+        cur.execute("""
+            SELECT
+                COUNT(*) as total_entries,
+                COUNT(DISTINCT brand) as unique_brands,
+                ROUND(AVG(amount_paid), 2) as avg_spending,
+                COUNT(DISTINCT consume_location) as locations_visited
+            FROM consumption_records
+            WHERE user_id = %s
+        """, (session['user_id'],))
+        stats = cur.fetchone()
+        cur.execute("""
+            SELECT
+                purchase_location,
+                COUNT(*) as count
+            FROM consumption_records
+            WHERE user_id = %s
+            GROUP BY purchase_location
+            ORDER BY count DESC
+            LIMIT 1
+        """, (session['user_id'],))
+        top_purchase_location = cur.fetchone()
+        cur.execute("""
+            SELECT
+                id, product_category, brand, sku, amount_paid, purchase_location,
+                consume_location, with_whom, to_char(submission_timestamp, 'YYYY-MM-DD HH24:MI') as date,
+                CASE
+                    WHEN additional_product_category IS NOT NULL THEN 'Yes'
+                    ELSE 'No'
+                END as had_additional_items
+            FROM consumption_records
+            WHERE user_id = %s
+            ORDER BY submission_timestamp DESC
+            LIMIT 5
+        """, (session['user_id'],))
+        recent_activities = cur.fetchall()
+        cur.execute("""
+            SELECT
+                product_category,
+                COUNT(*) as count,
+                SUM(amount_paid) as total_spent
+            FROM consumption_records
+            WHERE user_id = %s
+            GROUP BY product_category
+        """, (session['user_id'],))
+        consumption_by_category_raw = cur.fetchall()
+        consumption_by_category = [
+            {
+                'product_category': row['product_category'],
+                'count': row['count'],
+                'total_spent': row['total_spent'] if row['total_spent'] is not None else 0
+            }
+            for row in consumption_by_category_raw
+        ]
     return render_template(
         'dashboard.html',
         user_name=user_name,
@@ -261,28 +254,25 @@ def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
         
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-        user = cur.fetchone()
-        
-        if user:
-            token = secrets.token_urlsafe(32)
-            expires = datetime.now() + timedelta(hours=1)
-            
-            cur.execute("""
-                UPDATE users 
-                SET reset_token = %s, reset_token_expires = %s 
-                WHERE email = %s
-            """, (token, expires, email))
-            conn.commit()
-            
-            reset_link = url_for('reset_password', token=token, _external=True)
-            send_password_reset_email(email, reset_link)
-            
-        flash('If an account exists with this email, you will receive a password reset link', 'info')
-        cur.close()
-        conn.close()
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
+
+            if user:
+                token = secrets.token_urlsafe(32)
+                expires = datetime.now() + timedelta(hours=1)
+
+                cur.execute("""
+                    UPDATE users
+                    SET reset_token = %s, reset_token_expires = %s
+                    WHERE email = %s
+                """, (token, expires, email))
+                conn.commit()
+
+                reset_link = url_for('reset_password', token=token, _external=True)
+                send_password_reset_email(email, reset_link)
+
+            flash('If an account exists with this email, you will receive a password reset link', 'info')
         return redirect(url_for('login'))
     
     return render_template('forgot_password.html')
@@ -316,47 +306,38 @@ def send_password_reset_email(email, reset_link):
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("""
-        SELECT id, email, reset_token_expires 
-        FROM users 
-        WHERE reset_token = %s AND reset_token_expires > CURRENT_TIMESTAMP
-    """, (token,))
-    user = cur.fetchone()
-    
-    if not user:
-        flash('Invalid or expired token', 'danger')
-        cur.close()
-        conn.close()
-        return redirect(url_for('forgot_password'))
-    
-    if request.method == 'POST':
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        
-        if password != confirm_password:
-            flash('Passwords do not match', 'danger')
-            cur.close()
-            conn.close()
-            return redirect(request.url)
-        
-        hashed_password = generate_password_hash(password)
+    with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            UPDATE users 
-            SET password = %s, reset_token = NULL, reset_token_expires = NULL 
-            WHERE id = %s
-        """, (hashed_password, user['id']))
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        flash('Your password has been updated. Please login with your new password.', 'success')
-        return redirect(url_for('login'))
-    
-    cur.close()
-    conn.close()
-    return render_template('reset_password.html', token=token)
+            SELECT id, email, reset_token_expires
+            FROM users
+            WHERE reset_token = %s AND reset_token_expires > CURRENT_TIMESTAMP
+        """, (token,))
+        user = cur.fetchone()
+
+        if not user:
+            flash('Invalid or expired token', 'danger')
+            return redirect(url_for('forgot_password'))
+
+        if request.method == 'POST':
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
+
+            if password != confirm_password:
+                flash('Passwords do not match', 'danger')
+                return redirect(request.url)
+
+            hashed_password = generate_password_hash(password)
+            cur.execute("""
+                UPDATE users
+                SET password = %s, reset_token = NULL, reset_token_expires = NULL
+                WHERE id = %s
+            """, (hashed_password, user['id']))
+            conn.commit()
+
+            flash('Your password has been updated. Please login with your new password.', 'success')
+            return redirect(url_for('login'))
+
+        return render_template('reset_password.html', token=token)
 
 @app.route('/api/get-brands-and-skus')
 @login_required
@@ -434,44 +415,38 @@ def submit_consumption():
             timestamp = None
             logger.warning("Invalid submission_timestamp format; using NULL")
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        query = """
-            INSERT INTO consumption_records (
-                user_id, product_category, brand, sku, amount_paid, purchase_location,
-                consume_location, with_whom, with_what, latitude, longitude, accuracy,
+        with get_db_connection() as conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
+            query = """
+                INSERT INTO consumption_records (
+                    user_id, product_category, brand, sku, amount_paid, purchase_location,
+                    consume_location, with_whom, with_what, latitude, longitude, accuracy,
+                    additional_product_category, additional_brand, additional_sku,
+                    additional_amount_paid, additional_purchase_location,
+                    photo_path, video_path, submission_timestamp
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """
+            values = (
+                session['user_id'], product_category, brand, sku, float(amount_paid), purchase_location,
+                consume_location, with_whom, with_what, float(latitude) if latitude else None,
+                float(longitude) if longitude else None, float(accuracy) if accuracy else None,
                 additional_product_category, additional_brand, additional_sku,
-                additional_amount_paid, additional_purchase_location,
-                photo_path, video_path, submission_timestamp
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-        """
-        values = (
-            session['user_id'], product_category, brand, sku, float(amount_paid), purchase_location,
-            consume_location, with_whom, with_what, float(latitude) if latitude else None,
-            float(longitude) if longitude else None, float(accuracy) if accuracy else None,
-            additional_product_category, additional_brand, additional_sku,
-            float(additional_amount_paid) if additional_amount_paid else None,
-            additional_purchase_location, photo_path_db if photo_path else None,
-            video_path_db if video_path else None, timestamp
-        )
+                float(additional_amount_paid) if additional_amount_paid else None,
+                additional_purchase_location, photo_path_db if photo_path else None,
+                video_path_db if video_path else None, timestamp
+            )
 
-        cur.execute(query, values)
-        record_id = cur.fetchone()['id']
-        conn.commit()
-        cur.close()
-        conn.close()
+            cur.execute(query, values)
+            record_id = cur.fetchone()['id']
+            conn.commit()
 
-        return jsonify({
-            'success': True,
-            'message': 'Consumption recorded successfully',
-            'record_id': record_id
-        })
+            return jsonify({
+                'success': True,
+                'message': 'Consumption recorded successfully',
+                'record_id': record_id
+            })
 
     except psycopg2.Error as e:
-        conn.rollback()
-        cur.close()
-        conn.close()
         logger.error(f"Error submitting consumption: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 

@@ -10,3 +10,4 @@ openai-whisper
 pytz
 resampy
 python-magic
+
