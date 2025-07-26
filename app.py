@@ -30,6 +30,7 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 
 # Configuration settings
+
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_me')
 app.config['DB_HOST'] = os.environ.get('DB_HOST')
 app.config['DB_NAME'] = os.environ.get('DB_NAME')
@@ -39,6 +40,7 @@ app.config['DB_PORT'] = os.environ.get('DB_PORT', '5432')
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/uploads')
 app.config['ALLOWED_EXTENSIONS'] = set(os.environ.get('ALLOWED_EXTENSIONS', 'png,jpg,jpeg,mp4,mov,webm').split(','))
 app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
+
 
 # Email configuration settings
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -81,6 +83,32 @@ def login_required(f):
 # Check if the uploaded file is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+# Validate uploaded files using MIME sniffing and size checks
+ALLOWED_IMAGE_MIME_TYPES = {'image/png', 'image/jpeg'}
+ALLOWED_VIDEO_MIME_TYPES = {'video/mp4', 'video/quicktime', 'video/webm'}
+
+def validate_upload(file, allowed_mime_types):
+    if not file or file.filename == '':
+        return False, 'No file selected'
+
+    if not allowed_file(file.filename):
+        return False, 'Invalid file extension'
+
+    # Check actual file size
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > app.config['MAX_CONTENT_LENGTH']:
+        return False, 'File exceeds size limit'
+
+    # Sniff MIME type from content
+    mime_type = magic.from_buffer(file.read(2048), mime=True)
+    file.seek(0)
+    if mime_type not in allowed_mime_types:
+        return False, 'Invalid file MIME type'
+
+    return True, None
 
 # Mock brand and SKU data (replace with database query if needed)
 def get_brands_and_skus(category):
@@ -350,19 +378,23 @@ def submit_consumption():
 
         if 'photo' in request.files:
             photo = request.files['photo']
-            if photo.filename and allowed_file(photo.filename):
-                filename = secure_filename(f"{uuid.uuid4()}_{photo.filename}")
-                photo_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                photo.save(photo_path)
-                photo_path_db = f"uploads/{filename}"
+            valid, error = validate_upload(photo, ALLOWED_IMAGE_MIME_TYPES)
+            if not valid:
+                return jsonify({'success': False, 'message': error}), 400
+            filename = secure_filename(f"{uuid.uuid4()}_{photo.filename}")
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            photo.save(photo_path)
+            photo_path_db = f"uploads/{filename}"
 
         if 'video' in request.files:
             video = request.files['video']
-            if video.filename and allowed_file(video.filename):
-                filename = secure_filename(f"{uuid.uuid4()}_{video.filename}")
-                video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                video.save(video_path)
-                video_path_db = f"uploads/{filename}"
+            valid, error = validate_upload(video, ALLOWED_VIDEO_MIME_TYPES)
+            if not valid:
+                return jsonify({'success': False, 'message': error}), 400
+            filename = secure_filename(f"{uuid.uuid4()}_{video.filename}")
+            video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            video.save(video_path)
+            video_path_db = f"uploads/{filename}"
 
         required_fields = {
             'product_category': product_category,
@@ -430,11 +462,9 @@ def analyze_video():
         return jsonify({'success': False, 'message': 'No video file provided'}), 400
 
     file = request.files['video']
-    if not file or not allowed_file(file.filename):
-        return jsonify({'success': False, 'message': 'Invalid or missing video file'}), 400
-
-    if file.content_length > app.config['MAX_CONTENT_LENGTH']:
-        return jsonify({'success': False, 'message': 'Video exceeds 16MB limit'}), 400
+    valid, error = validate_upload(file, ALLOWED_VIDEO_MIME_TYPES)
+    if not valid:
+        return jsonify({'success': False, 'message': error}), 400
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = secure_filename(f"user_{session['user_id']}_{timestamp}.{file.filename.rsplit('.', 1)[1].lower()}")
@@ -630,8 +660,8 @@ def parse_transcript(transcript):
     
     return data
 
-@app.route('/static/<path:filename>')
-def serve_static(filename):
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
     response = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     response.headers['Cache-Control'] = 'public, max-age=31536000'  # Cache for 1 year
     return response
