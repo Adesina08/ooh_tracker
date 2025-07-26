@@ -375,6 +375,8 @@ def submit_consumption():
 
         photo_path = None
         video_path = None
+        photo_path_db = None
+        video_path_db = None
 
         if 'photo' in request.files:
             photo = request.files['photo']
@@ -437,8 +439,8 @@ def submit_consumption():
                 float(longitude) if longitude else None, float(accuracy) if accuracy else None,
                 additional_product_category, additional_brand, additional_sku,
                 float(additional_amount_paid) if additional_amount_paid else None,
-                additional_purchase_location, photo_path_db if photo_path else None,
-                video_path_db if video_path else None, timestamp
+                additional_purchase_location, photo_path_db,
+                video_path_db, timestamp
             )
 
             cur.execute(query, values)
